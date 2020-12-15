@@ -156,7 +156,6 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
 
 // #pragma GLOBAL_ASM("asm/non_matchings/overlays/actors/ovl_En_Jj/func_80A87B1C.s")
 void func_80A87B1C(EnJj* this) {
-    // u8 temp_t8;
 
     if (this->unk_30F > 0) {
         this->unk_30F--;
@@ -236,7 +235,6 @@ void func_80A87D94(EnJj* this, GlobalContext* globalCtx) {
                 this->unk_310 = 0;
                 this->unk_311 = 0;
                 this->unk_30A ^= 2;
-                // phi_v1 = this->unk_30A;
             }
             break;
 
