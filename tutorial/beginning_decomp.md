@@ -787,7 +787,7 @@ we see that the diff is nearly correct (note that `-3` lets you compare current 
 
 <details>
 <summary>
-    Large code block, click to show.
+    Large image, click to show.
 </summary>
 
 ![Init diff 2](init_diff2.png)
