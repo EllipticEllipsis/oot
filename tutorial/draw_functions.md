@@ -1,5 +1,8 @@
 # Draw functions
 
+Up: [Contents](contents.md)
+Previous: [The rest of the functions in the actor](other_functions.md)
+
 Draw functions behave completely differently from the other functions in an actor. They often use a lot of macros.
 
 For this tutorial we will first look at the `EnJj` draw function, `EnJj_Draw`, then some more complicated examples.

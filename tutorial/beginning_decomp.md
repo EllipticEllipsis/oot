@@ -1,5 +1,7 @@
 # Beginning decompilation: the Init function and the Actor struct
 
+Up: [Contents](contents.md)
+
 Open the C file and the H file with your actor's name from the appropriate directory in `src/overlays/actors/`. These will be the main files we work with. We will be using EnJj (Lord Jabu Jabu) as our example: despite being a fairly small actor, it has a number of interesting features.
 
 Each actor has associated to it a data file and one assembly file per function. During the process, we will transfer the contents of all or most of these into the main C file. VSCode's search feature usually makes it quite easy to find the appropriate files without troubling the directory tree.

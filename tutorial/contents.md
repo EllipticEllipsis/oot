@@ -24,11 +24,11 @@
 		- Using diff
 		- control flow (branches) -> instruction ordering -> register allocation -> stack
 
-- [The rest of the actor](other_functions.md)
+- [The rest of the function in the actor](other_functions.md)
     - Order of decompilation
     - Action Functions and other functions
 
-	- The permuter
+	- More on matching: the permuter
 
 - [Draw functions](draw_functions.md)
 
