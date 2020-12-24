@@ -2,24 +2,27 @@
 
 Draw functions behave completely differently from the other functions in an actor. They often use a lot of macros.
 
-For this tutorial we will look at the `EnJj` draw function, `EnJj_Draw`
+For this tutorial we will first look at the `EnJj` draw function, `EnJj_Draw`, then some more complicated examples.
 
 ## A first example
 
-Unless it is completely invisible, an actor usually has a draw function is one of the main four actor functions. Hence its prototype looks like
+Unless it is completely invisible, an actor usually has a draw function as one of the main four actor functions. Hence its prototype looks like
 
 ```C
-EnJj_Draw(Actor* thisx, GlobalContext* globalCtx);```
+EnJj_Draw(Actor* thisx, GlobalContext* globalCtx);
+```
 
 As in Init, Destroy and Update, it is much more convenient to feed mips2c the fake prototype
 
 ```C
-EnJj_Draw(EnFirefly* this, GlobalContext* globalCtx);```
+EnJj_Draw(EnJj* this, GlobalContext* globalCtx);
+```
 
 so that it fills out the struct fields from the actuar actor; we then put a
 
 ```C
-EnJj* this = THIS;```
+EnJj* this = THIS;
+```
 
 in the declarations as before. From now on, the process is rather different from the decompilation process used for the other functions. Here is the output of mips2c after sorting out the actor struct from Init, and with the arguments set back to `Actor* thisx`:
 ```C
@@ -47,7 +50,8 @@ void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx) {
     sp18 = this;
     SkelAnime_DrawFlexOpa(globalCtx, this->skelAnime.skeleton, this->skelAnime.limbDrawTbl, (s32) this->skelAnime.dListCount, 0, 0);
     Graph_CloseDisps(&sp3C, globalCtx->state.gfxCtx, (const char *) "../z_en_jj.c", 0x382);
-}```
+}
+```
 
 Notable features are the Open and Close Disps functions, and blocks of the form
 
@@ -56,7 +60,8 @@ temp_v1 = temp_a1->polyOpa.p;
 temp_a1->polyOpa.p = temp_v1 + 8;
 temp_v1->words.w0 = 0xDB060020;
 temp_a0 = *(&D_80A88CFC + (this->unk_30E * 4));
-temp_v1->words.w1 = (temp_a0 & 0xFFFFFF) + gSegments[(u32) (temp_a0 * 0x10) >> 0x1C] + 0x80000000;```
+temp_v1->words.w1 = (temp_a0 & 0xFFFFFF) + gSegments[(u32) (temp_a0 * 0x10) >> 0x1C] + 0x80000000;
+```
 
 (This is a particularly simple example, since there's only one of these blocks. We will give a more involved example later.)
 
@@ -72,43 +77,54 @@ Graphics are actually 64-bit on the Nintendo 64. This code block is a result of 
 Our example is polyOpa, not surprisingly since Jabu is solid.
 
 `words.w0` and `words.w1` contain the actual graphics instruction, in hex format. Usually, `w0` is constant and `w1` contains the arguments. To find out what sort of macro we are dealing with, we use `gfxdis.f3dex2`. `w1` is variable, but we need to give the program a constant placeholder. A common word to use is 12345678, so in this case we run
-```gfxdis.f3dex2 -x -g "POLY_OPA_DISP++" -d DB06002012345678```
+```
+gfxdis.f3dex2 -x -g "POLY_OPA_DISP++" -d DB06002012345678
+```
 
-- `-x` uses hex instead of the default normalised shorts (never mind what those are)
+- `-x` uses hex instead of the default qu macros (never mind what those are, OoT doesn't have them)
 - `-g` is used to specify which graphics pointer macro to use
 - `-d` is for the graphics dword
 
 Our standard now is to use decimal colors. If you have a constant second argument rather than a variable one, you can also use `-dc` to get decimal colors instead of the default hex.
 
 The output looks like
-```gSPSegment(POLY_OPA_DISP++, 0x08, 0x12345678);```
+```
+gSPSegment(POLY_OPA_DISP++, 0x08, 0x12345678);
+```
 
 We can now replace the `0x12345678` by the actual second word. Or we could, if we had worked out what it was.
 
 Firstly, `*(&D_80A88CFC + (this->unk_30E * 4))` is referring to a piece of data we haven't externed yet. It looks like
-```glabel D_80A88CFC
-.word 0x06007698, 0x06007A98, 0x06007E98, 0x00000000, 0x00000000```
+```
+glabel D_80A88CFC
+.word 0x06007698, 0x06007A98, 0x06007E98, 0x00000000, 0x00000000
+```
 
 The first three words look like pointers to assets in the actor segment, which would make sense if we're looking for textures to draw. The last two words are 0, which is strange. A check in the rest of the actor file shows that `unk_30E` only takes the values `0,1,2`. We conclude that the last two words are just padding, and can be removed. Because this data is used in a graphics macro, it will be a displaylist. We therefore set it up to be an array of pointers to Gfx:
 ```C
 extern Gfx* D_80A88CFC[];
-// static Gfx* D_80A88CFC[] = { 0x06007698, 0x06007A98, 0x06007E98, }```
+// static Gfx* D_80A88CFC[] = { 0x06007698, 0x06007A98, 0x06007E98, }
+```
 
 It goes through further processing before it is used in the macro: `(temp_a0 & 0xFFFFFF) + gSegments[(u32) (temp_a0 * 0x10) >> 0x1C] + 0x80000000` is a conversion of a segmented address into a VRAM address. We have a macro for this too: `SEGMENTED_TO_VIRTUAL`. So after all this, the second word is
 ```C
-SEGMENTED_TO_VIRTUAL(D_80A88CFC[this->unk_30E]);```
+SEGMENTED_TO_VIRTUAL(D_80A88CFC[this->unk_30E]);
+```
 and the whole macro is
 ```C
-gSPSegment(POLY_OPA_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(D_80A88CFC[this->unk_30E]));```
+gSPSegment(POLY_OPA_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(D_80A88CFC[this->unk_30E]));
+```
 
 You repeat this for every block in the function.
 
 We also have macros for Graph_OpenDisps and Graph_CloseDisps: you can replace
 ```C
-Graph_OpenDisps(&sp3C, temp_a1, (const char *) "../z_en_jj.c", 0x36F);```
+Graph_OpenDisps(&sp3C, temp_a1, (const char *) "../z_en_jj.c", 0x36F);
+```
 by
 ```C
-OPEN_DISPS(temp_a1, "../z_en_jj.c", 879);```
+OPEN_DISPS(temp_a1, "../z_en_jj.c", 879);
+```
 (the last argument is a line number, so should be in decimal).
 
 The function may or may not use a temp for `globalCtx->state.gfxCtx`: you have to work it out using the diff.
@@ -130,9 +146,10 @@ void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx) {
     SkelAnime_DrawFlexOpa(globalCtx, this->skelAnime.skeleton, this->skelAnime.limbDrawTbl,
      this->skelAnime.dListCount, 0, 0, this);
     CLOSE_DISPS(globalCtx->state.gfxCtx, "../z_en_jj.c", 898);
-}```
+}
+```
 
-matches apart from a couple of stack differences. This can be resolved by giving it `GlobalContext* globalCtx = globalCtx2;` and changing the second argument to `globalCtx2` as usual.
+matches apart from a couple of stack differences. This can be resolved by giving it `GlobalContext* globalCtx = globalCtx2;` at the top of the function and changing the second argument to `globalCtx2` as usual.
 
 
 ## More examples
