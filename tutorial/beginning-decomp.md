@@ -82,7 +82,8 @@ The web version of mips2c can be found [here](https://simonsoftware.se/other/mip
 
 Since the actor depends on the rest of the codebase, we can't expect to get much intelligible out of mips2c without giving it some context. We make this using a Python script in the `tools` folder called `m2ctx.py`, so run
 ```sh
-./tools/m2ctx.py <path_to_c_file>```
+./tools/m2ctx.py <path_to_c_file>
+```
 from the main directory of the repository. In this case, the C file is `src/overlays/actors/ovl_En_Jj/z_en_jj.c`. This generates a file called `ctx.c` in the main directory of the repository. Open this file in a text editor (Notepad will do) and copy the whole contents into the "Existing C source, preprocessed" box.
 
 Now, open the file containing the assembly for `EnJj_Init`. Copy the entire contents of this file into the upper box, labelled "MIPS assembly". Now, for Init (and also the other "main 4" functions `Destroy`, `Update` and `Draw`), the function's first argument is `Actor* thisx`. But we would like mips2c to use the fields in the actual actor struct; we can make it do this by deliberately changing the prototype of the `EnJj_Init` in the pasted context to have first argument `EnJj* this` instead.
@@ -105,19 +106,22 @@ void EnJj_Init(EnJj *this, GlobalContext *globalCtx) {
     ActorShape_Init(&this->actor.shape, 0.0f, NULL, 0.0f);
     temp_v0 = this->actor.params;
     temp_a1 = this + 0x164;
-	...```
+	...
+```
 
 Typically for all buth the simplest functions, there is a lot that needs fixing before we are anywhere near seeing how close we are to the original code. You will notice that mips2c creates a lot of temporary variables. A lot of these will turn out to not be real, and we need to remove the right ones to get the code to match.
 
 First, change the first argument back to `Actor* thisx` so that the function matches its prototype above. To allow the function to find the variables, we need another correction. Half of this has already been done at the top of the function, where we have
 
 ```C
-#define THIS ((EnJj*)thisx)```
+#define THIS ((EnJj*)thisx)
+```
 
 To do the other half, write the following at the beginning of the function, before any declarations:
 
 ```C
-EnJj* this = THIS;```
+EnJj* this = THIS;
+```
 
 Now everything points to the right place, even though the argument of the function seems inconsistent with the contents.
 
@@ -134,7 +138,8 @@ In the next sections, we shall sort out the various initialisation functions tha
 Almost always, one of the first items in `Init` is a function that looks like
 
 ```C
-Actor_ProcessInitChain(&this->actor, &D_80A88CE0);```
+Actor_ProcessInitChain(&this->actor, &D_80A88CE0);
+```
 
 which initialises common properties of actor using an InitChain, which is usually somewhere near the top of the data, in this case in the variable `D_80A88CE0`. Although we don't need to do this now since we we will extern the data, we might as well work out what it is now. Fortunately, we have a script to do this.
 
@@ -147,7 +152,8 @@ static InitChainEntry sInitChain[] = {
     ICHAIN_F32(unk_F4, 4000, ICHAIN_CONTINUE),
     ICHAIN_F32(unk_F8, 3300, ICHAIN_CONTINUE),
     ICHAIN_F32(unk_FC, 1100, ICHAIN_STOP),
-};```
+};
+```
 
 However, some of these variables have now been given names in the Actor struct. Pass it `--names` to fill these in automatically:
 ```C
@@ -157,11 +163,13 @@ static InitChainEntry sInitChain[] = {
     ICHAIN_F32(uncullZoneForward, 4000, ICHAIN_CONTINUE),
     ICHAIN_F32(uncullZoneScale, 3300, ICHAIN_CONTINUE),
     ICHAIN_F32(uncullZoneDownward, 1100, ICHAIN_STOP),
-};```
+};
+```
 
 Replace the commented-out .words for the `glabel D_80A88CE0` with this, and comment it out, instead adding
 ```C
 extern InitChainEntry D_80A88CE0[];
+
 ```
 above it:
 
@@ -172,13 +180,15 @@ extern InitChainEntry D_80A88CE0[];
 //     ICHAIN_F32(unk_F4, 4000, ICHAIN_CONTINUE),
 //     ICHAIN_F32(unk_F8, 3300, ICHAIN_CONTINUE),
 //     ICHAIN_F32(unk_FC, 1100, ICHAIN_STOP),
-// };```
+// };
+```
 
  (We will come back and actually import it after doing the rest of the actor.)
 
 Since this is an array, we do not need the `&` in the function any more, which leaves us with
 ```C
-Actor_ProcessInitChain(&this->actor, D_80A88CE0);```
+Actor_ProcessInitChain(&this->actor, D_80A88CE0);
+```
 
 in `EnJj_Init`.
 
@@ -188,7 +198,8 @@ Glancing through the rest of `EnJj_Init`, we notice some references to DynaPoly,
 ```C
 DynaPolyInfo_SetActorMove((DynaPolyActor *) this, 0);
 DynaPolyInfo_Alloc((void *) &D_06000A1C, (void *) &sp4C);
-this->unk_14C = DynaPolyInfo_RegisterActor(globalCtx, &globalCtx->colCtx.dyna, &this->actor, sp4C);```
+this->unk_14C = DynaPolyInfo_RegisterActor(globalCtx, &globalCtx->colCtx.dyna, &this->actor, sp4C);
+```
 
 This means that EnJj is not an ordinary actor: it is instead a DynaPoly actor. In-game this is to do with how the actor interacts with Link and the environment (a good rule of thumb is that Link can often stand on DynaPoly actors as if they were ground). For decompilation purposes, it means that the actor struct is wrong: the first element of a DynaPoly actor's struct is not an `Actor` struct, but a `DynaPolyActor`, usually called `dyna`. We should fix this immediately to avoid confusion later. (Some actors have this correctly identified already; we were unlucky with this one.)
 
@@ -204,7 +215,8 @@ typedef struct {
     /* 0x15C */ u32 unk_15C;
     /* 0x160 */ u8 unk_160;
     /* 0x162 */ s16 unk_162;
-} DynaPolyActor; // size = 0x164```
+} DynaPolyActor; // size = 0x164
+```
 
 so a `DynaPolyActor` struct is an `Actor` with various other things after it. For now all we care about is the size, i.e. `0x164`. This tells us that the next thing after the `DynaPolyActor` struct in the `EnJj` struct begins at `0x164`, not `0x14C` as it does for `Actor`s.
 
@@ -216,13 +228,15 @@ Next we need to adjust the size of the array so that the struct is still the rig
 typedef struct EnJj {
     /* 0x0000 */ DynaPolyActor dyna;
     /* 0x0164 */ char unk_164[0x1B0];
-} EnJj; // size = 0x0314```
+} EnJj; // size = 0x0314
+```
 
 Now that we know this, it is worth remaking the context file and running mips2c again, since we have changed the struct significantly. Doing so, and replacing `(Actor*) this` with `&this->dyna.actor` this time, we find that the block we quoted above has become
 ```C
 DynaPolyInfo_SetActorMove((DynaPolyActor *) this, 0);
 DynaPolyInfo_Alloc((void *) &D_06000A1C, (void *) &sp4C);
-this->dyna.dynaPolyId = DynaPolyInfo_RegisterActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);```
+this->dyna.dynaPolyId = DynaPolyInfo_RegisterActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+```
 
 Next, replace `(DynaPolyActor *) this` by `&this->dyna`. There's not a lot more we can do to the DynaPoly stuff right now, so just remove the casts to void and move on.
 
@@ -235,7 +249,8 @@ The relevant functions in this actor are
 temp_a1_3 = this + 0x2B0;
 sp44 = temp_a1_3;
 Collider_InitCylinder(globalCtx, (ColliderCylinder *) temp_a1_3);
-Collider_SetCylinder(globalCtx, (ColliderCylinder *) temp_a1_3, &this->dyna.actor, &D_80A88CB4);```
+Collider_SetCylinder(globalCtx, (ColliderCylinder *) temp_a1_3, &this->dyna.actor, &D_80A88CB4);
+```
 
 Notice that `sp44` is set, but actually not used anywhere in the actor. This is a good indication that it is fake. We'll get back to that. Similarly, `temp_a1_3` is only used in these functions, so is likely to be fake as well: it's simply trying to get the pointer into the `a1` register.
 
@@ -246,12 +261,14 @@ typedef struct EnJj {
     /* 0x0164 */ char unk_164[0x14C];
     /* 0x02B0 */ ColliderCylinder collider;
     /* 0x02FC */ char unk_2FC[0x18];
-} EnJj; // size = 0x0314```
+} EnJj; // size = 0x0314
+```
 
 Now replace the temps, so we have
 ```C
 Collider_InitCylinder(globalCtx, &this->collider);
-Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &D_80A88CB4);```
+Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &D_80A88CB4);
+```
 
 (You may prefer to just comment out temps initially, to keep track of where they were.)
 
@@ -265,7 +282,8 @@ static ColliderCylinderInit sCylinderInit =
     { COLTYPE_UNK10, 0x00, 0x09, 0x39, 0x10, COLSHAPE_CYLINDER },
     { 0x00, { 0x00000000, 0x00, 0x00 }, { 0x00000004, 0x00, 0x00 }, 0x00, 0x01, 0x01 },
     { 170, 150, 0, { 0, 0, 0 } },
-};```
+};
+```
 
 As with the InitChain, replace the commented-out data we copied into the C file with this:
 ```C
@@ -275,7 +293,8 @@ extern ColliderCylinderInit D_80A88CB4;
 //     { COLTYPE_UNK10, 0x00, 0x09, 0x39, 0x10, COLSHAPE_CYLINDER },
 //     { 0x00, { 0x00000000, 0x00, 0x00 }, { 0x00000004, 0x00, 0x00 }, 0x00, 0x01, 0x01 },
 //     { 170, 150, 0, { 0, 0, 0 } },
-// };```
+// };
+```
 
 Unlike the InitChain, this is not an array, so keep the `&` in the function.
 
@@ -287,7 +306,8 @@ temp_a1 = this->unk_164;
 ...
 sp44 = (DynaCollisionContext *) temp_a1;
 SkelAnime_InitFlex(globalCtx, (SkelAnime *) temp_a1, (FlexSkeletonHeader *) &D_0600B9A8, (AnimationHeader *) &D_06001F4C, this + 0x1A8, this + 0x22C, 0x16);
-SkelAnime_ChangeAnimDefaultRepeat((SkelAnime *) sp44, (AnimationHeader *) &D_06001F4C);```
+SkelAnime_ChangeAnimDefaultRepeat((SkelAnime *) sp44, (AnimationHeader *) &D_06001F4C);
+```
 
 (Both of the temps are likely to be fake.)
 
@@ -310,7 +330,8 @@ typedef struct EnJj {
     /* 0x022C */ Vec3s overrideDrawTable[22];
     /* 0x02B0 */ ColliderCylinder collider;
     /* 0x02FC */ char unk_2FC[0x18];
-} EnJj; // size = 0x0314```
+} EnJj; // size = 0x0314
+```
 
 The last information we get from the SkelAnime functions is the types of two of the externed symbols: `D_0600B9A8` is a `FlexSkeletonHeader`, and `D_06001F4C` is an `AnimationHeader`. So we can change these in the C file:
 
@@ -319,23 +340,27 @@ extern UNK_TYPE D_06000A1C;
 extern UNK_TYPE D_06001830;
 extern AnimationHeader D_06001F4C;
 extern FlexSkeletonHeader D_0600B9A8;
-extern UNK_TYPE D_0600BA8C;```
+extern UNK_TYPE D_0600BA8C;
+```
 
 and removing the temps,
 ```C
 SkelAnime_InitFlex(globalCtx, &this->skelAnime, &D_0600B9A8, &D_06001F4C, this->limbDrawTable, this->transitionDrawTable, 22);
-SkelAnime_ChangeAnimDefaultRepeat(&this->skelAnime, &D_06001F4C);```
+SkelAnime_ChangeAnimDefaultRepeat(&this->skelAnime, &D_06001F4C);
+```
 
 ### More struct variables
 
 This function also gives us information about other things in the struct. One obvious thing that sticks out is
 ```C
-this->unk300 = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, (u16)0x5A, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, (?32) this->dyna.actor.posRot.rot.y, 0, 0);```
+this->unk300 = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, (u16)0x5A, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, (?32) this->dyna.actor.posRot.rot.y, 0, 0);
+```
 Hovering over this function tells us it outputs a pointer to the spawned actor, so `this->unk_300` is an `Actor*`. We may or may not care what this actor actually is, depending on how it is used later on, so let's just add `/* 0x0300 */ Actor * childActor` to the struct for now.
 
 We can look up what the actor with ID 0x5A is in `z64actor.h`: we find it is `ACTOR_EN_JJ`. So some Jabus spawn another Jabu. Filling this in and removing the spurious cast, we have
 ```C
-this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);```
+this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
+```
 
 Finally, we have this block:
 ```C
@@ -343,7 +368,8 @@ this->unk30A = (u16)0;
 this->unk30E = (u8)0;
 this->unk30F = (u8)0;
 this->unk310 = (u8)0;
-this->unk311 = (u8)0;```
+this->unk311 = (u8)0;
+```
 This is not quite as helpful as you might think: it tells us the size of these variables, but despite mips2c's assertion that they are all unsigned, they may actually be signed: you can't tell from the MIPS unless they are loaded: there is only `sh`, but there are both `lh` and `lhu`, for example. There's not much to choose between them when guessing, but generally signed is a better guess with no other context. For unnamed struct variables, our convention is `unk_30A` etc. Adding them to the struct, we end up with
 ```C
 typedef struct EnJj {
@@ -362,7 +388,8 @@ typedef struct EnJj {
     /* 0x0310 */ s8 unk_310;
     /* 0x0311 */ s8 unk_311;
     /* 0x0312 */ char unk_312[0x2];
-} EnJj; // size = 0x0314```
+} EnJj; // size = 0x0314
+```
 
 We can remove a few more temps that don't look real, and end up with
 ```C
@@ -428,7 +455,8 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     this->dyna.actor.update = &func_80A87F44;
     this->dyna.actor.draw = NULL;
     Actor_SetScale(&this->dyna.actor, 0.087f);
-}```
+}
+```
 
 This will still not compile without errors: we need to know what the functions it calls are.
 
@@ -441,29 +469,34 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx);
 void EnJj_Update(Actor* thisx, GlobalContext* globalCtx);
 void EnJj_Draw(Actor* thisx, GlobalContext* globalCtx);
 
-void func_80A87F44(Actor* thisx, GlobalContext* globalCtx);```
+void func_80A87F44(Actor* thisx, GlobalContext* globalCtx);
+```
 
 Unfortunately the others are not so easy to deal with. In order to find out what type the functions called by `func_80A87800`, we have to look at `func_80A87800` itself. But fortunately, this is the entire MIPS for `func_80A87800`:
 
 ```MIPS
 glabel func_80A87800
 /* 00000 80A87800 03E00008 */  jr      $ra                        
-/* 00004 80A87804 AC8502FC */  sw      $a1, 0x02FC($a0)           ## 000002FC```
+/* 00004 80A87804 AC8502FC */  sw      $a1, 0x02FC($a0)           ## 000002FC
+```
 
 This is simple enough to read that we don't even need to appeal to mips2c: it saves its second argument into its first argument `+ 0x2FC`. Many actors use this type of function, which we call `SetupAction`: it simply changes the action function.
 
 Action functions are the main other kind of function in most actors: they are usually run by Update every frame, and carry out the main actions that the actor does (hence the name). They all have the same arguments, and so we have a typedef for such things: it is
 ```C
-typedef void (*EnJjActionFunc)(struct EnJj*, GlobalContext*);```
+typedef void (*EnJjActionFunc)(struct EnJj*, GlobalContext*);
+```
 This also gives us another bit of the struct, conveniently plugging the gap at `0x2FC`:
 ```C
-/* 0x02FC */ EnJjActionFunc actionFunc;```
+/* 0x02FC */ EnJjActionFunc actionFunc;
+```
 
 We have actually learnt three useful pieces of information from this, the other two being that the function above Init is simply
 ```C
 void func_80A87800(EnJj* this, EnJjActionFunc actionFunc) {
 	this->actionFunc = actionFunc;
-}```
+}
+```
 
 and `func_80A87BEC` and `func_80A87C30` are action functions. Since they are first used above where they are defined, we prototype them at the top as well,
 ```C
@@ -474,7 +507,8 @@ void EnJj_Draw(Actor* thisx, GlobalContext* globalCtx);
 
 void func_80A87F44(Actor* thisx, GlobalContext* globalCtx);
 void func_80A87BEC(EnJj* this, GlobalContext* globalCtx);
-void func_80A87C30(EnJj* this, GlobalContext* globalCtx);```
+void func_80A87C30(EnJj* this, GlobalContext* globalCtx);
+```
 
 
 ### Other pointer issues
@@ -609,7 +643,8 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     this->dyna.actor.update = func_80A87F44;
     this->dyna.actor.draw = NULL;
     Actor_SetScale(&this->dyna.actor, 0.087f);
-}```
+}
+```
 
 
 ## Diff
@@ -619,14 +654,16 @@ Once preliminary cleanup and struct filling is done, most time spent matching fu
 In order to use `diff.py` with the symbol names, we need a copy of the code to compare against. This is done by copying the `build` folder into a folder called `expected`. Copying in Windows on WSL is very slow, so run
 ```sh
 mkdir expected
-cp -r build/ expected/```
+cp -r build/ expected/
+```
 from the main directory of the repository. You should end up with the folder structure `expected/build/...`.
 
 You may want to do this again when you start renaming functions. *Make sure that you copy an OK build, or you are going to get very confused.* You should also do this again after needing to do a `make clean`.
 
 Now, we run diff on the function name: in the main directory,
 ```sh
-./diff.py -mwo3 EnJj_Init```
+./diff.py -mwo3 EnJj_Init
+```
 
 (To see what these arguments do, run it with `./diff.py -h` or look in the scripts documentation.)
 
@@ -637,7 +674,8 @@ This gives the following:
 The code we want is on the left, current code on the right. To spot where the function ends, either look for where stuff is added and subtracted from the stack pointer in successive lines, or for a
 ```MIPS
 jr      ra
-nop```
+nop
+```
 
 The colours mean the following:
 
@@ -724,7 +762,8 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx) {
             Actor_SetScale(&this->dyna.actor, 0.087f);
             break;
     }
-}```
+}
+```
 
 we see that the diff is nearly correct (note that `-3` lets you compare current with previous):
 
@@ -735,7 +774,8 @@ except we still have some stack issues. Now that `temp_v0` is only used once, it
 void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
     GlobalContext* globalCtx = globalCtx2;
     EnJj* this = THIS;
-	...```
+	...
+```
 
 It turns out that this is enough to completely fix the diff:
 
@@ -744,7 +784,8 @@ It turns out that this is enough to completely fix the diff:
 
 Everything *looks* fine, but we only know for sure when we run `make`. But doing so gives
 ```sh
-zelda_ocarina_mq_dbg.z64: OK```
+zelda_ocarina_mq_dbg.z64: OK
+```
 
 which is either a sense of triumph or relief depending on how long you've spent on a function.
 
@@ -765,12 +806,14 @@ glabel func_80A87F44
 /* 00744 80A87F44 AFA40000 */  sw      $a0, 0x0000($sp)           
 /* 00748 80A87F48 03E00008 */  jr      $ra                        
 /* 0074C 80A87F4C AFA50004 */  sw      $a1, 0x0004($sp)           
+
 ```
 This is a classic "function with two arguments that does nothing". So we can simply comment out the appropriate pragma and put
 ```C
 void func_80A87F44(Actor* thisx, GlobalContext* globalCtx) {
     
-}```
+}
+```
 in the C file.
 
 ## Destroy
@@ -793,7 +836,8 @@ void EnJj_Destroy(EnJj *this, GlobalContext *globalCtx) {
         return;
     }
     DynaPolyInfo_Free(temp_a3, &temp_a3->colCtx.dyna, (s32) this->dyna.dynaPolyId);
-}```
+}
+```
 
 Again remember to return the first argument to `Actor* this` and put `EnJj* this = THIS;` in the function body. Based on what we know about this actor already, we expect this to be another switch. Rearranging it as such, and removing the likely fake `temp_v0` gives
 ```C
@@ -812,7 +856,8 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
             DynaPolyInfo_Free(temp_a3, &temp_a3->colCtx.dyna, this->dyna.dynaPolyId);
             break;
     }
-}```
+}
+```
 Using `./diff.py -mwo3 EnJj_Destroy` shows that this matches already, but it seems like the temp usage should be more consistent. A little experimentation shows that
 ```C
 void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
@@ -828,7 +873,8 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
             DynaPolyInfo_Free(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
             break;
     }
-}```
+}
+```
 
 also matches, with no need for the `GlobalContext*` temp.
 
@@ -842,7 +888,8 @@ void func_80A87BEC(EnJj *this, GlobalContext *globalCtx) {
     if (this->dyna.actor.xzDistFromLink < 300.0f) {
         func_80A87800(this, &func_80A87B9C);
     }
-}```
+}
+```
 
 We see that this function just sets another action function when Link is close enough to the actor. All we have to do to this is remove the `&`, and prototype `func_80A87B9C` to be an action function. Notably, this time it is not used before it is defined, so we don't need a prototype at the top: putting a placeholder one in at the function position will do, i.e. our total edits this time are
 ```C
@@ -854,7 +901,8 @@ void func_80A87BEC(EnJj *this, GlobalContext *globalCtx) {
     if (this->dyna.actor.xzDistFromLink < 300.0f) {
         func_80A87800(this, func_80A87B9C);
     }
-}```
+}
+```
 
 We can now either follow this chain of action functions down, or start with the other one. We will go down in this case: it is usually easier to keep track that way.
 
@@ -872,7 +920,8 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx) {
             func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, this->childActor->unk14C);
         }
     }
-}```
+}
+```
 Here's a new function for our actor struct! Don't be deceived by the `s32` cast in the comparison: mips2c always does that if it's not sure. The reliable one is the `s16` cast lower down. (An `s32` doesn't fit in the space we have anyway). So the actor struct is now
 ```C
 typedef struct EnJj {
@@ -892,13 +941,15 @@ typedef struct EnJj {
     /* 0x0310 */ s8 unk_310;
     /* 0x0311 */ s8 unk_311;
     /* 0x0312 */ char unk_312[0x2];
-} EnJj; // size = 0x0314```
+} EnJj; // size = 0x0314
+```
 
 We can eliminate the temp since it's use in a simple way one after the other. `this->unk308 = (s16) (this->unk308 - 0x66);` can be written as `this->unk308 -= 0x66;`.
 
 In the `func_8003EBF8` we see that we should have at least made `this->childActor` a `DynaPolyActor*`, so that the last argument is its `DynaPolyId`. To avoid compiler warnings, we also need to cast the `Actor_SpawnAsChild` in Init,
 ```C
-this->childActor = (DynaPolyActor*)Actor_SpawnAsChild(...)```
+this->childActor = (DynaPolyActor*)Actor_SpawnAsChild(...)
+```
 
 Doing so, we are left with
 ```C
@@ -909,7 +960,8 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx) {
             func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, this->childActor->dynaPolyId);
         }
     }
-}```
+}
+```
 
 The diff shows this doesn't match:
 
@@ -923,11 +975,13 @@ The permuter is a useful program for when you run out of ideas: it assigns a fun
 
 To use the permuter, clone the decomp-permuter repo from the link given in Discord. First, import the C file and MIPS of the function to compare using
 ```sh
-./import.py <path_to_c> <path_to_func_name.s>```
+./import.py <path_to_c> <path_to_func_name.s>
+```
 
 It will put it in a subdirectory of `nonmatchings`. You then run
 ```sh
-./permuter.py nonmatchings/<function_name>/ ```
+./permuter.py nonmatchings/<function_name>/ 
+```
 to produce suggestions. There are various arguments that can be used, of which the most important initially is `-j`: `-jN` tells it to use `N` CPU threads.
 
 Suggestions are saved in the function directory it imported the function into.
@@ -954,7 +1008,8 @@ The first suggestion looks plausible:
 +      func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, new_var->dynaPolyId);
      }
  
-   }```
+   }
+```
 
 In particular, adding a temp for the actor. Some of the rest is rather puzzling, but let's just try the actor temp,
 ```C
@@ -967,7 +1022,8 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx) {
             func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->dynaPolyId);
         }
     }
-}```
+}
+```
 
 ![func_80A87B9C diff 2](func_80A87B9C_diff2.png)
 
@@ -984,7 +1040,8 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx) {
             func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->dynaPolyId);
         }
     }
-}```
+}
+```
 
 With that, we have reached the end of this action function chain, and now have to look at `func_80A87C30`
 
@@ -1001,7 +1058,8 @@ void func_80A87C30(EnJj *this, GlobalContext *globalCtx) {
     this->collider.dim.pos.y = 0x14;
     this->collider.dim.pos.z = -0x30;
     CollisionCheck_SetOC(globalCtx, &globalCtx->colChkCtx, (Collider *) &this->collider);
-}```
+}
+```
 
 If you know anything about this game, this is obviously the function that begins the process of the swallowing Link cutscene. Performing minor cleanups reduces us to
 ```C
@@ -1014,14 +1072,16 @@ void func_80A87C30(EnJj *this, GlobalContext *globalCtx) {
     this->collider.dim.pos.y = 20;
     this->collider.dim.pos.z = -48;
     CollisionCheck_SetOC(globalCtx, &globalCtx->colChkCtx, &this->collider);
-}```
+}
+```
 
 There are three things left to do to this function: 
 - prototype the new action function, `func_80A87CEC`. This one is used before its definition, so needs to be prototyped at the top of the file.
 - extern `D_80A88CF0`, and since the arguments of `Math_Vec3f_DistXZ` are `Vec3f`s, convert it to floats. To do float conversion, either use an online converter, or get an extension for VSCode that can do it. The data becomes
 ```C
 extern Vec3f D_80A88CF0;
-// static Vec3f D_80A88CF0 = { -1589, 53, -43 };```
+// static Vec3f D_80A88CF0 = { -1589, 53, -43 };
+```
 
 - replace the mysterious `globalCtx->unk1C44 + 0x24`. The first part is so common that most people on decomp know it by heart: it is the location of the Player actor. `+ 0x24` is obviously an offset that leats to a `Vec3f`, and if you look in the actor struct, you find that this is the location of `PosRot.pos`. To use `Player`, we put `Player* player = PLAYER` at the top of the function.
 
@@ -1038,11 +1098,13 @@ void func_80A87C30(EnJj *this, GlobalContext *globalCtx) {
     this->collider.dim.pos.y = 20;
     this->collider.dim.pos.z = -48;
     CollisionCheck_SetOC(globalCtx, &globalCtx->colChkCtx, &this->collider);
-}```
+}
+```
 
 One issue we have swept under the carpet thus far is what `unk_30C` is: we still have it as padding. For this we have to look at the MIPS, since mips2c hasn't told us. Scanning through the file, we find
 ```MIPS
-/* 00498 80A87C98 A60E030C */  sh      $t6, 0x030C($s0)           ## 0000030C```
+/* 00498 80A87C98 A60E030C */  sh      $t6, 0x030C($s0)           ## 0000030C
+```
 
 which tells us that `unk_30C` is an `s16`, filling another gap in the struct:
 ```C
@@ -1063,7 +1125,8 @@ typedef struct EnJj {
     /* 0x0310 */ s8 unk_310;
     /* 0x0311 */ s8 unk_311;
     /* 0x0312 */ char unk_312[0x2];
-} EnJj; // size = 0x0314```
+} EnJj; // size = 0x0314
+```
 
 The diff now looks fine for this function, but it gives compiler warnings about `CollisionCheck_SetOC(globalCtx, &globalCtx->colChkCtx, &this->collider);`: the last argument is the wrong type: we need to give it `&this->collider.base` instead, which points to the same address, but is the right type. So the matching function is
 ```C
@@ -1078,7 +1141,8 @@ void func_80A87C30(EnJj *this, GlobalContext *globalCtx) {
     this->collider.dim.pos.y = 20;
     this->collider.dim.pos.z = -48;
     CollisionCheck_SetOC(globalCtx, &globalCtx->colChkCtx, &this->collider.base);
-}```
+}
+```
 
 Again we have only one choice for our next function, namely `func_80A87CEC`.
 
@@ -1106,7 +1170,8 @@ void func_80A87CEC(EnJj *this, GlobalContext *globalCtx) {
     func_8005B1A4(globalCtx->cameraPtrs[globalCtx->activeCamera]);
     gSaveContext.unkEDA = (u16) (gSaveContext.unkEDA | 0x400);
     func_80078884((u16)0x4802U);
-}```
+}
+```
 
 Easy things to sort out:
 
@@ -1118,11 +1183,13 @@ Easy things to sort out:
 
 - `globalCtx->cameraPtrs[globalCtx->activeCamera]` has a macro: it is `ACTIVE_CAM`, so this line can be written as
 ```C
-func_8005B1A4(ACTIVE_CAM);```
+func_8005B1A4(ACTIVE_CAM);
+```
 
 - `gSaveContext.unkEDA` we have dealt with before: it is `gSaveContext.eventChkInf[3]`. This is a flag-setting function; it can be written more compactly as
 ```C
-gSaveContext.unkEDA |= 0x400```
+gSaveContext.unkEDA |= 0x400
+```
 
 - The last function is an audio function: we can look up the argument in `sfx.h` and find it is `NA_SE_SY_CORRECT_CHIME`
 
@@ -1141,7 +1208,8 @@ void func_80A87CEC(EnJj *this, GlobalContext *globalCtx) {
     func_8005B1A4(ACTIVE_CAM);
     gSaveContext.eventChkInf[3] |= 0x400;
     func_80078884(NA_SE_SY_CORRECT_CHIME);
-}```
+}
+```
 
 matches, but generates a complier warning for `func_8005B1A4`, which it can't find. To fix this, add it to `functions.h`, in as near as possible the correct position in numerical order. Some detective work shows that this function lives in `z_camera.c`, and its type is `s16 func_8005B1A4(Camera* camera)`, so add this line to `functions.h` at the bottom of the camera functions part.
 
@@ -1160,7 +1228,8 @@ void func_80A87CEC(EnJj* this, GlobalContext* globalCtx) {
         gSaveContext.eventChkInf[3] |= 0x400;
         func_80078884(NA_SE_SY_CORRECT_CHIME);
     }
-}```
+}
+```
 
 and still match. (Early `return`s are used after an `Actor_Kill` and in a few other situations, but generally avoided for `else`s elsewhere if possible. Talking of which...)
 
@@ -1182,13 +1251,15 @@ void func_80A87EF0(EnJj *this, GlobalContext *globalCtx) {
             this->dyna.actor.child = NULL;
         }
     }
-}```
+}
+```
 
 Now we're a bit stuck: this tells us that `this->unk_304` is an actor, but we know nothing else about it. So just make it an actor for the time being.
 
 We also find in the MIPS
 ```MIPS
-lhu     $v0, 0x030A($a0)```
+lhu     $v0, 0x030A($a0)
+```
 which at last tells us that `unk_30A` is actually a `u16`. We can now eliminate `temp_v0`, and replace the ` == 0` by a `!`, which leaves
 ```C
 void func_80A87EF0(EnJj *this, GlobalContext *globalCtx) {
@@ -1202,7 +1273,8 @@ void func_80A87EF0(EnJj *this, GlobalContext *globalCtx) {
             this->dyna.actor.child = NULL;
         }
     }
-}```
+}
+```
 although we are none the wiser as to which actor `unk_304` actually points to.
 
 Again we have run out of action functions. The rules suggest that we now look at Update.
@@ -1224,7 +1296,8 @@ void EnJj_Update(EnJj *this, GlobalContext *globalCtx) {
     SkelAnime_FrameUpdateMatrix(&this->skelAnime);
     Actor_SetScale((Actor *) this, 0.087f);
     this->skelAnime.limbDrawTbl->unk40 = (s16) this->unk_308;
-}```
+}
+```
 
 This has several problems: firstly, the action function is called with the wrong argument. We should be suspicious of all the functions this actor calls, and decompile them mith mips2c without context if necessary, if only to find out how many arguments they have. Starting with `func_80A87B1C` if only because it is shorter, mips2c tells us that it does indeed only take one argument. On the other hand, we find that `func_80A87D94` definitely takes `EnJj* this, GlobalContext* globalCtx` as arguments. Again, put these prototypes at the function locations above to avoid compiler warnings.
 
@@ -1247,7 +1320,8 @@ void EnJj_Update(Actor *thisx, GlobalContext *globalCtx) {
     SkelAnime_FrameUpdateMatrix(&this->skelAnime);
     Actor_SetScale(&this->dyna.actor, 0.087f);
     this->skelAnime.limbDrawTbl[10].z = this->unk_308;
-}```
+}
+```
 which matches.
 
 
@@ -1282,7 +1356,8 @@ void func_80A87B1C(EnJj *this) {
         this->unk_30F = Math_Rand_S16Offset((u16)0x14, (u16)0x14);
         this->unk_310 = (s8) (u8) this->unk_311;
     }
-}```
+}
+```
 
 From this we can read off that `unk_30F` is a `u8`, `unk_30E` is a `u8`, `unk_310` is a `u8`, and `unk_311` is a `u8`. Giving mips2c new context and trying again,
 ```C
@@ -1309,7 +1384,8 @@ void func_80A87B1C(EnJj *this) {
         this->unk_30F = Math_Rand_S16Offset((u16)0x14, (u16)0x14);
         this->unk_310 = this->unk_311;
     }
-}```
+}
+```
 and all the weird casts are gone. Eliminating the temps, replacing the hex, discarding pointless definitions, and replacing early `return`s by `else`s, we end up with
 ```C
 void func_80A87B1C(EnJj* this) {
@@ -1327,7 +1403,8 @@ void func_80A87B1C(EnJj* this) {
             }
         }
     }
-}```
+}
+```
 
 Sadly this doesn't match:
 
@@ -1402,14 +1479,16 @@ void func_80A87D94(EnJj *this, GlobalContext *globalCtx) {
             this->unk_308 = temp_v0_2 - 0x66;
         }
     }
-}```
+}
+```
 
 At the top we have
 ```C
 temp_v0 = *globalCtx->unk1D94;
     if (temp_v0 != 1) {
         if (temp_v0 != 2) {
-            if (temp_v0 != 3) {```
+            if (temp_v0 != 3) {
+```
 Firstly, we are now comparing with the value of `globalCtx->unk1D94`, not just using a pointer, so we need the first thing in `globalCtx->csCtx.npcActions[2]`. This turns out to be `globalCtx->csCtx.npcActions[2]->action`.
 
 The if structure here is another classic indicator of a switch: nested, with the same variable compared multiple times. If you were to diff this as-is, you would find that the code is in completely the wrong order. Reading how the ifs work, we see that if `temp_v0` is `1`, it executes the outermost else block, if it is `2`, the middle, if `3`, the innermost, and if it is anything else, the contents of the innermost if. Hence this becomes
@@ -1476,10 +1555,12 @@ void func_80A87D94(EnJj *this, GlobalContext *globalCtx) {
             this->unk_308 = temp_v0_2 - 0x66;
         }
     }
-}```
+}
+```
 (notice that this time we need a `default` to deal with the innermost if contents). If you try to replace `0x206D` in the `Audio_PlayActorSound2`, you will find there is no such sfxId in the list: this is because some sound effects have an extra offset of `0x800` to do with setting flags. Adding `0x800` to the sfxId shows that this sound effect is `NA_SE_EV_JABJAB_BREATHE`. To correct this to the id in the function, we have a macro `SFX_FLAG`, and it should therefore be
 ```C
-Audio_PlayActorSound2(&this->dyna.actor, NA_SE_EV_JABJAB_BREATHE - SFX_FLAG);```
+Audio_PlayActorSound2(&this->dyna.actor, NA_SE_EV_JABJAB_BREATHE - SFX_FLAG);
+```
 
 As usual, most of the remaining temps look fake. The only one that does not is possibly `phi_v1`. However, the way in which they are used here makes it hard to tell if they are fake, and if so, how to replace them. I encourage you to try this yourself, with the aid of the diff script; the final, matching result, with other cleanup, is hidden below
 
@@ -1524,7 +1605,8 @@ void func_80A87D94(EnJj* this, GlobalContext* globalCtx) {
             this->unk_308 -= 102;
         }
     }
-}```
+}
+```
 
 </details>
 
