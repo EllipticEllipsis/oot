@@ -371,7 +371,7 @@ this->unk310 = (u8)0;
 this->unk311 = (u8)0;
 ```
 This is not quite as helpful as you might think: it tells us the size of these variables, but despite mips2c's assertion that they are all unsigned, they may actually be signed: you can't tell from the MIPS unless they are loaded: there is only `sh`, but there are both `lh` and `lhu`, for example. There's not much to choose between them when guessing, but generally signed is a better guess with no other context. For unnamed struct variables, our convention is `unk_30A` etc. Adding them to the struct, we end up with
-<detail>
+<details>
 <summary>
     Large code block, click to show.
 </summary>
@@ -462,7 +462,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     Actor_SetScale(&this->dyna.actor, 0.087f);
 }
 ```
-</detail>
+</details>
 
 This will still not compile without errors: we need to know what the functions it calls are.
 
@@ -530,7 +530,7 @@ Therefore, the condition should be `(gSaveContext.eventChkInf[3] & 0x400) != 0`.
 
 With all of this implemented, the function should now compile without errors. The parts of the file that we have changed now look like
 
-<detail>
+<details>
 <summary>
     Large code block, click to show.
 </summary>
@@ -657,7 +657,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     Actor_SetScale(&this->dyna.actor, 0.087f);
 }
 ```
-</detail>
+</details>
 
 ## Diff
 
@@ -681,13 +681,13 @@ Now, we run diff on the function name: in the main directory,
 
 This gives the following:
 
-<detail>
+<details>
 <summary>
     Large image, click to show.
 </summary>
 
 ![Init diff 1](init_diff1.png)
-</detail>
+</details>
 
 The code we want is on the left, current code on the right. To spot where the function ends, either look for where stuff is added and subtracted from the stack pointer in successive lines, or for a
 ```MIPS
@@ -785,13 +785,13 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx) {
 
 we see that the diff is nearly correct (note that `-3` lets you compare current with previous):
 
-<detail>
+<details>
 <summary>
     Large code block, click to show.
 </summary>
 
 ![Init diff 2](init_diff2.png)
-</detail>
+</details>
 
 except we still have some stack issues. Now that `temp_v0` is only used once, it looks fake. Eliminating it actually seems to make the stack worse. To fix this, we employ something that we have evidence that the developers did: namely, we make a copy of `globalCtx` (the theory is that they actually used `gameState` as an argument of the main 4 functions, just like we used `Actor* thisx` as the first argument. The quick way to do this is to change the top of the function to
 ```C
