@@ -8,7 +8,7 @@ Each actor has associated to it a data file and one assembly file per function. 
 
 The actor file starts off looking like:
 
-![Fresh header annotated](fresh_actor_header_annotated.png)
+![Fresh actor file annotated](fresh_actor_file_annotated.png)
 
 It is currently divided into six sections as follows:
 
@@ -41,7 +41,8 @@ The general rule for order of decompilation is
 - Next, decompile any other functions from the actor you have found in `Init`. You generally start with the action functions, because they retorn nothing and all take the same arguments,
 
 ```C
-void func_80whatever(EnJj* this, GlobalContext* globalCtx);```
+void func_80whatever(EnJj* this, GlobalContext* globalCtx);
+```
 
 - Decompile each action function in turn until you run out. Along the way, do any other functions in the actor for which you have discovered the argument types. (You are probably better doing depth-first on action functions than breadth-first: it's normally easier to follow along one branch of the actions than )
 
