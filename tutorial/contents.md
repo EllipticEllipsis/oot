@@ -45,5 +45,5 @@
 
 ## Apendices
 - Appendix: Some notes on the basic structure of N64 MIPS
-Appendix: Glossary
-Appendix: Conventions
+- Appendix: Glossary
+- Appendix: Conventions
