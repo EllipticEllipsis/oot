@@ -290,8 +290,9 @@ There are three things left to do to this function:
 - extern `D_80A88CF0`, and since the arguments of `Math_Vec3f_DistXZ` are `Vec3f`s, convert it to floats. To do float conversion, either use an online converter, or get an extension for VSCode that can do it. The data becomes
 ```C
 extern Vec3f D_80A88CF0;
-// static Vec3f D_80A88CF0 = { -1589, 53, -43 };
+// static Vec3f D_80A88CF0 = { -1589.0f, 53.0f, -43.0f };
 ```
+(you must include the `.0f` parts even for integer floats: it can affect codegen, and as such it is part of our style).
 
 - replace the mysterious `globalCtx->unk1C44 + 0x24`. The first part is so common that most people on decomp know it by heart: it is the location of the Player actor. `+ 0x24` is obviously an offset that leats to a `Vec3f`, and if you look in the actor struct, you find that this is the location of `PosRot.pos`. To use `Player`, we put `Player* player = PLAYER` at the top of the function.
 
@@ -464,7 +465,7 @@ void func_80A87EF0(EnJj *this, GlobalContext *globalCtx) {
 }
 ```
 
-Now we're a bit stuck: this tells us that `this->unk_304` is an actor, but we know nothing else about it. So just make it an actor for the time being.
+Now we're a bit stuck: this tells us that `this->unk_304` is an `Actor*`, but we know nothing else about it. So just make it an actor for the time being. As before, `this->unk_304` is a pointer, so we should compare `temp_a0` to `NULL`.
 
 We also find in the MIPS
 ```MIPS

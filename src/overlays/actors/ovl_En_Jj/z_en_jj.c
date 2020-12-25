@@ -21,7 +21,7 @@ void func_80A87C30(EnJj* this, GlobalContext* globalCtx);
 void func_80A87CEC(EnJj* this, GlobalContext* globalCtx);
 void func_80A87EF0(EnJj* this, GlobalContext* globalCtx);
 
-/*
+
 const ActorInit En_Jj_InitVars = {
     ACTOR_EN_JJ,
     ACTORTYPE_ITEMACTION,
@@ -33,31 +33,30 @@ const ActorInit En_Jj_InitVars = {
     (ActorFunc)EnJj_Update,
     (ActorFunc)EnJj_Draw,
 };
-*/
 
-extern UNK_TYPE D_80A88164;
+s32 unused = 0;
 
-extern ColliderCylinderInit D_80A88CB4;
-// static ColliderCylinderInit sCylinderInit =
-// {
-//     { COLTYPE_UNK10, 0x00, 0x09, 0x39, 0x10, COLSHAPE_CYLINDER },
-//     { 0x00, { 0x00000000, 0x00, 0x00 }, { 0x00000004, 0x00, 0x00 }, 0x00, 0x01, 0x01 },
-//     { 170, 150, 0, { 0, 0, 0 } },
-// };
+#include "z_en_jj_cutscene_data.c" EARLY
 
-extern InitChainEntry D_80A88CE0[];
-// static InitChainEntry sInitChain[] = {
-//     ICHAIN_VEC3F_DIV1000(scale, 87, ICHAIN_CONTINUE),
-//     ICHAIN_F32(uncullZoneForward, 4000, ICHAIN_CONTINUE),
-//     ICHAIN_F32(uncullZoneScale, 3300, ICHAIN_CONTINUE),
-//     ICHAIN_F32(uncullZoneDownward, 1100, ICHAIN_STOP),
-// };
+s32 usused2[] = { 0, 0 };
 
-extern Vec3f D_80A88CF0;
-// static Vec3f D_80A88CF0 = { -1589, 53, -43 };
+static ColliderCylinderInit sCylinderInit =
+{
+    { COLTYPE_UNK10, 0x00, 0x09, 0x39, 0x10, COLSHAPE_CYLINDER },
+    { 0x00, { 0x00000000, 0x00, 0x00 }, { 0x00000004, 0x00, 0x00 }, 0x00, 0x01, 0x01 },
+    { 170, 150, 0, { 0, 0, 0 } },
+};
 
-extern Gfx* D_80A88CFC[];
-// static Gfx* D_80A88CFC[] = { 0x06007698, 0x06007A98, 0x06007E98, }
+static InitChainEntry sInitChain[] = {
+    ICHAIN_VEC3F_DIV1000(scale, 87, ICHAIN_CONTINUE),
+    ICHAIN_F32(uncullZoneForward, 4000, ICHAIN_CONTINUE),
+    ICHAIN_F32(uncullZoneScale, 3300, ICHAIN_CONTINUE),
+    ICHAIN_F32(uncullZoneDownward, 1100, ICHAIN_STOP),
+};
+
+static Vec3f D_80A88CF0 = { -1589.0f, 53.0f, -43.0f };
+
+static Gfx* D_80A88CFC[] = { 0x06007698, 0x06007A98, 0x06007E98, };
 
 extern UNK_TYPE D_06000A1C;
 extern UNK_TYPE D_06001830;
@@ -76,8 +75,8 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
     EnJj* this = THIS;
 
     s32 sp4C = 0;
-    
-    Actor_ProcessInitChain(&this->dyna.actor, D_80A88CE0);
+
+    Actor_ProcessInitChain(&this->dyna.actor, sInitChain);
     ActorShape_Init(&this->dyna.actor.shape, 0.0f, NULL, 0.0f);
 
     switch (this->dyna.actor.params) {
@@ -103,7 +102,7 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
             this->dyna.dynaPolyId =
                 DynaPolyInfo_RegisterActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
             Collider_InitCylinder(globalCtx, &this->collider);
-            Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &D_80A88CB4);
+            Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &sCylinderInit);
             this->dyna.actor.colChkInfo.mass = 0xFF;
             break;
         case 0:
@@ -259,7 +258,7 @@ void func_80A87EF0(EnJj* this, GlobalContext* globalCtx) {
     if (!(this->unk_30A & 4)) {
         this->unk_30A |= 4;
         temp_a0 = this->unk_304;
-        if (temp_a0 != 0) {
+        if (temp_a0 != NULL) {
             Actor_Kill(temp_a0);
             this->dyna.actor.child = NULL;
         }
