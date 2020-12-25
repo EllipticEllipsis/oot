@@ -2573,7 +2573,7 @@ endseg
 beginseg
     name "ovl_En_Jj"
     include "build/src/overlays/actors/ovl_En_Jj/z_en_jj.o"
-    include "build/data/overlays/actors/z_en_jj.data.o"
+    //include "build/data/overlays/actors/z_en_jj.data.o"
     include "build/data/overlays/actors/z_en_jj.reloc.o"
 endseg
 

@@ -32,8 +32,12 @@
 
 - [Draw functions](draw_functions.md)
 
-- Data, migration and non-migration
+- [Data, migration and non-migration](data.md)
+	- Importing the data: early and late
+
 	- Fake symbols
+	- Inlining
+	- Padding
 
 
 
