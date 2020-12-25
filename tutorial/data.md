@@ -111,6 +111,7 @@ Finally, we have a script to convert the cutscene data into macros, namely `csdi
 <summary>
     Long code block, click to view
 </summary>
+
 ```
 ./tools/csdis.py 80A88164
 ovl_En_Jj: Rom 00E3E3D0:00E3F9E0 VRam 80A87800:80A88E10 Offset 000964
@@ -269,6 +270,7 @@ static CutsceneData D_80A88164[] = {
     CS_END(),
 };
 ```
+
 </details>
 
 Copy this into the file we just made (given the length, you may prefer to `>` it into a file and copy it from there, rather than the terminal itself). Save and close that file: we won't need it any more.
