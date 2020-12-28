@@ -1,5 +1,14 @@
 # Data
 
+## Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [Data first](#data-first)
+  * [Example: `EnTg`](#example---entg-)
+- [Extern and data last](#extern-and-data-last)
+- [Fake symbols](#fake-symbols)
+- [Inlining](#inlining)
+
 Each actor's data is stored in a separate file. EnJj's data is in `data/overlays/actors/z_en_jj.data.s`, for example. At some point in the decompilation process we need to convert this raw data into recognisable information for the C to use.
 
 There are two main ways to do this: either 
@@ -7,6 +16,8 @@ There are two main ways to do this: either
 2. wait until the data appears in functions, extern it, then import it at the end
 
 Sometimes something between these two is appropriate: wait until the largest or strangest bits of data appear in functions, get some typing information out of that, and then import it, but for now, let's stick to both of these.
+
+Both approaches have their advantages and disadvantages.
 
 ## Data first
 
