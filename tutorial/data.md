@@ -113,7 +113,7 @@ Finally, we have a script to convert the cutscene data into macros, namely `csdi
 </summary>
 
 ```
-./tools/csdis.py 80A88164
+$ ./tools/csdis.py 80A88164
 ovl_En_Jj: Rom 00E3E3D0:00E3F9E0 VRam 80A87800:80A88E10 Offset 000964
 
 static CutsceneData D_80A88164[] = {
@@ -329,7 +329,7 @@ Oh no! What went wrong?
 
 To find out what went wrong, we need to use `firstdiff.py`. This tells us where our ROM starts to differ:
 ```
-./firstdiff.py
+$ ./firstdiff.py
 First difference at ROM addr 0x144F4, gDmaDataTable (RAM 0x80016DA0, ROM 0x12F70, build/asm/dmadata.o)
 Bytes: 00:E3:F9:D0 vs 00:E3:F9:E0
 Instruction difference at ROM addr 0xE3ED48, En_Jj_InitVars (RAM 0x80A88140, ROM 0xE3ED10, build/src/overlays/actors/ovl_En_Jj/z_en_jj.o)
@@ -379,7 +379,7 @@ s32 usused = 0;
 
 This isn't good enough: we still get Error 1, but:
 ```
-./first_diff.py
+$ ./first_diff.py
 First difference at ROM addr 0x144F4, gDmaDataTable (RAM 0x80016DA0, ROM 0x12F70, build/asm/dmadata.o)
 Bytes: 00:E3:F9:D0 vs 00:E3:F9:E0
 Instruction difference at ROM addr 0xE3F87C, unused (RAM 0x80A88160, ROM 0xE3ED30, build/src/overlays/actors/ovl_En_Jj/z_en_jj.o)

@@ -8,7 +8,7 @@ This generates the context for mips2c to use to type objects in its output. It l
 ```sh
 ./tools/m2ctx.py <path_to_c>
 ```
-will produce a file in the root directory called `ctx.c`. You open 
+will produce a file in the root directory called `ctx.c`. You open this file and copy it into the mips2c context box.
 
 The rule of thumb is to rerun this every time you change something significant to other functions, like the struct in the header or a function prototype, and probably after every function, at least at first. As with most other things on this project, you will develop intuition for when this is required.
 
@@ -27,6 +27,8 @@ The usual way diff is used is
 - `3` allows comparison of the previous and current saves of the file.
 
 Many other options exist, use the `-h` to see them.
+
+![Example of a diff](func_80A87B9C_diff1.png)
 
 The colors have the following meanings:
 
@@ -55,12 +57,14 @@ to produce suggestions. There are various arguments that can be used, of which t
 
 Suggestions are saved in the function directory it imported the function into.
 
-## firstdiff
+## first_diff
 
 Tells you where your built rom first differs from the baserom. It gives you a memory address that you can use to do, e.g. a binary diff, and also tries too find what function or data this address is in. Run with 
 ```C
-./firstdiff.py
+./first_diff.py
 ```
+
+If the rom is shifted, the first problem will be in gDMADataTable. Ignore this and look at the next one for where you actually need to look to see what's happened. The last line makes a guess on this location you need to edit to fix the problem.
 
 ## syminfo
 
@@ -83,7 +87,7 @@ and copy the output. (This used to only take the ROM address, which you would ne
 
 ## colliderinit
 
-This is used to convert data `D_address` in the various ColliderInit functions into the format of a collider. It lives in `tools/overlayhelpers`. Because there are different types of collider, you need to give it the type of collider as well. This does not need the baserom path, but automatically assumes it knows where it is, so you have to run it from `tools/overlayhelpers`. You also have to give it the `<address>` without the leading `D_`.
+This is used to convert data `D_address` in the various ColliderInit functions into the format of a collider. It lives in `tools/overlayhelpers`. Because there are different types of collider, you need to give it the type of collider as well. This does not need the baserom path, and a recent update allows it to be run from anywhere. You also have to give it the `<address>` without the leading `D_`.
 ```sh
 ./colliderinit.py <address> <type> <num>
 ```
@@ -117,11 +121,11 @@ and replace the contents of the printf with the output.
 
 ## Glank's N64 tools
 
-In particular, the ones used to decompile graphics macros. Their use is discussed in the section on decompiling Draw functions.
+In particular, the ones used to decompile graphics macros. Their use is discussed in the section on [decompiling Draw functions](draw_functions.md).
 
 ## graphovl
 
-This generates a directed graph showing an actor's function. Download from [here](), put it in the root directory of the project, and run
+This generates a directed graph showing an actor's function. Search for `graphovl.py` in the Discord. Put it in the root directory of the project, and run
 ```sh
 ./graphovl.py Actor_Name
 ```
@@ -138,3 +142,18 @@ Tracks down any `.s` files no longer used by the project. Does not ignore commen
 ./tools/find_unused_asm.py
 ```
 will output a list of all such files, while adding `-d` deletes the files.
+
+## csdis
+
+This converts the cutscene data into macros that the cutscene system uses. Cutscenes are generally very long, so I recommend sending the output straight to a file with `>`, rather than trying to copy it all from the terminal. Run
+```sh
+./tools/csdis.py <address>
+```
+on the address from the `D_address` containing the cutscene data.
+
+## regconvert
+
+This converts the direct memory references, of the form `gGameInfo + 0x<offset>`, into the corresponding REG macros defined in [regs.h](../include/regs.h). Run
+```sh
+./tools/regconvert.py <offset>
+```

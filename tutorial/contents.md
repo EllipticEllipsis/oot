@@ -48,6 +48,7 @@
 - Pull requests
 
 ## Appendices
-- Appendix: Some notes on the basic structure of N64 MIPS
-- Appendix: Glossary
-- Appendix: Conventions
+- [Helper scripts](helper_scripts.md)
+- Some notes on the basic structure of N64 MIPS
+- Glossary
+- Conventions
