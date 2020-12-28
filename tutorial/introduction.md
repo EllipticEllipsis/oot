@@ -20,7 +20,8 @@ glabel func_80A13098
 /* 00054 80A130C4 A08201B8 */  sb      $v0, 0x01B8($a0)           ## 000001B8
 /* 00058 80A130C8 A08201B9 */  sb      $v0, 0x01B9($a0)           ## 000001B9
 /* 0005C 80A130CC 03E00008 */  jr      $ra                        
-/* 00060 80A130D0 A0980117 */  sb      $t8, 0x0117($a0)           ## 00000117```
+/* 00060 80A130D0 A0980117 */  sb      $t8, 0x0117($a0)           ## 00000117
+```
 
 (the commented numbers on the left are the original machine code, the middle the translation into MIPS assembly, the right useful information about the numbers in the code)
 and turn it into compilable C code:
@@ -36,7 +37,8 @@ void func_80A13098(EnFirefly* this) {
     this->auraType = 1;
     this->onFire = 1;
     this->actor.naviEnemyId = 0x11;
-}```
+}
+```
 
 which is intended to be as close to the original code as possible. We are doing *matching* decomp: in the right context, the above C compiles into *precisely* the assembly code above, not just equivalent code.
 
