@@ -18,7 +18,7 @@ It is currently divided into six sections as follows:
 
 2. Specific `include`s and `define`s for the actor. You may need to add more header files, but otherwise this section is unlikely to change.
 
-3. These are  prototypes for the "main four" functions that almost every actor has. You add more functions here if they need to be declared above their first use.
+3. These are prototypes for the "main four" functions that almost every actor has. You add more functions here if they need to be declared above their first use.
 
 4. A set of `extern`s. These should be moved immediately to between blocks 5 and 6 to conform with how the rest of our files are structured. These symbols have been automatically extracted from the MIPS code. They point to addresses in the ROM where assets are stored (usually animations or display lists). There may turn out to be some that were not caught by the script, in which case they need to be placed in the file called `undefined_syms.txt` in the root directory of the project. Ask in Discord for how to do this: it is simple, but rare enough to not be worth covering here.
 

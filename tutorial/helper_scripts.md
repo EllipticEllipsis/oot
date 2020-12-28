@@ -164,3 +164,13 @@ This converts the direct memory references, of the form `gGameInfo + 0x<offset>`
 ```sh
 ./tools/regconvert.py <offset>
 ```
+
+## assist
+
+This takes a function name, and looks for functions with very similar assembly code. It outputs the best matches, and tells you if there is a decompiled one.
+```sh
+./tools/assist.py <function_name>
+```
+It has two optional arguments:
+- `--threshold` adjust how high the matching threshold is, 1.0 being highest, 0.0 lowest
+- `--num-out` change the number of matches to output

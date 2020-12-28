@@ -34,10 +34,8 @@
 
 - [Data, migration and non-migration](data.md)
 	- Importing the data: early and late
-
 	- Fake symbols
 	- Inlining
-	- Padding
 
 
 
@@ -48,6 +46,7 @@
 - Pull requests
 
 ## Appendices
+- [Types, Structs and Padding](types_structs_padding.md)
 - [Helper scripts](helper_scripts.md)
 - Some notes on the basic structure of N64 MIPS
 - Glossary

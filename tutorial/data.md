@@ -2,9 +2,8 @@
 
 ## Table of Contents
 
-- [Table of Contents](#table-of-contents)
 - [Data first](#data-first)
-  * [Example: `EnTg`](#example---entg-)
+  * [Example: `EnTg`](#example-entg)
 - [Extern and data last](#extern-and-data-last)
 - [Fake symbols](#fake-symbols)
 - [Inlining](#inlining)

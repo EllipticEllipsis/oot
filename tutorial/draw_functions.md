@@ -155,7 +155,7 @@ void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx) {
 matches apart from a couple of stack differences. This can be resolved by giving it `GlobalContext* globalCtx = globalCtx2;` at the top of the function and changing the second argument to `globalCtx2` as usual.
 
 
-## More examples
+## More examples: OverrideLimbDraw and PostLimbDraw
 
 
 
