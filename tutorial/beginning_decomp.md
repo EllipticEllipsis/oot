@@ -84,7 +84,7 @@ The web version of mips2c can be found [here](https://simonsoftware.se/other/mip
 
 Since the actor depends on the rest of the codebase, we can't expect to get much intelligible out of mips2c without giving it some context. We make this using a Python script in the `tools` folder called `m2ctx.py`, so run
 ```sh
-./tools/m2ctx.py <path_to_c_file>
+$ ./tools/m2ctx.py <path_to_c_file>
 ```
 from the main directory of the repository. In this case, the C file is `src/overlays/actors/ovl_En_Jj/z_en_jj.c`. This generates a file called `ctx.c` in the main directory of the repository. Open this file in a text editor (Notepad will do) and copy the whole contents into the "Existing C source, preprocessed" box.
 
@@ -148,7 +148,7 @@ which initialises common properties of actor using an InitChain, which is usuall
 The InitChain script is also in the tools folder, and is called `ichaindis.py`. Simply passing it the ROM address will spit out the entire contents of the InitChain, in this case:
 
 ```sh
-./tools/ichaindis.py baserom.z64 80A88CE0
+$ ./tools/ichaindis.py baserom.z64 80A88CE0
 static InitChainEntry sInitChain[] = {
     ICHAIN_VEC3F_DIV1000(unk_50, 87, ICHAIN_CONTINUE),
     ICHAIN_F32(unk_F4, 4000, ICHAIN_CONTINUE),
@@ -158,8 +158,8 @@ static InitChainEntry sInitChain[] = {
 ```
 
 However, some of these variables have now been given names in the Actor struct. Pass it `--names` to fill these in automatically:
-```C
-./tools/ichaindis.py --names baserom.z64 80A88CE0
+```sh
+$ ./tools/ichaindis.py --names baserom.z64 80A88CE0
 static InitChainEntry sInitChain[] = {
     ICHAIN_VEC3F_DIV1000(scale, 87, ICHAIN_CONTINUE),
     ICHAIN_F32(uncullZoneForward, 4000, ICHAIN_CONTINUE),
@@ -276,7 +276,7 @@ Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &D_80A88CB4)
 
 The last thing we need to deal with is the last variable of `Collider_SetCylinder`, which is again data. Also again we have a script to translate the raw data. This one is called `colliderinit.py`, and lives in `tools/overlayhelpers`. It takes the VRAM address of the data and the type of collider (for more info pass it `-h`). We find
 ```sh
-./tools/overlayhelpers/colliderinit.py 80A88CB4 ColliderCylinderInit
+$ ./tools/overlayhelpers/colliderinit.py 80A88CB4 ColliderCylinderInit
 ovl_En_Jj: Rom 00E3E3D0:00E3F9E0 VRam 80A87800:80A88E10 Offset 0014B4
 
 static ColliderCylinderInit sCylinderInit =
@@ -667,7 +667,7 @@ Once preliminary cleanup and struct filling is done, most time spent matching fu
 
 In order to use `diff.py` with the symbol names, we need a copy of the code to compare against. This is done by copying the `build` folder into a folder called `expected`. Copying in Windows on WSL is very slow, so run
 ```sh
-mkdir expected
+$ mkdir expected
 cp -r build/ expected/
 ```
 from the main directory of the repository. You should end up with the folder structure `expected/build/...`.
@@ -676,7 +676,7 @@ You may want to do this again when you start renaming functions. *Make sure that
 
 Now, we run diff on the function name: in the main directory,
 ```sh
-./diff.py -mwo3 EnJj_Init
+$ ./diff.py -mwo3 EnJj_Init
 ```
 
 (To see what these arguments do, run it with `./diff.py -h` or look in the scripts documentation.)

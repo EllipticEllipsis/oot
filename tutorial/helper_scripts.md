@@ -28,6 +28,13 @@ The usual way diff is used is
 
 Many other options exist, use the `-h` to see them.
 
+In order to use `diff.py` with the symbol names (with `o`), we need a copy of the code to compare against. This is done by copying the `build` folder into a folder called `expected`. Copying in Windows on WSL is very slow, so run
+```sh
+mkdir expected
+cp -r build/ expected/
+```
+from the main directory of the repository. You should end up with the folder structure `expected/build/...`.
+
 ![Example of a diff](func_80A87B9C_diff1.png)
 
 The colors have the following meanings:
