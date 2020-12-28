@@ -633,7 +633,7 @@ Hooray, we won!
 
 ## Fake symbols
 
-Some symbols in the data have been decompiled wrongly, being incorrectly separated from the previous symbol due to how it was accessed by the actor's functions. However, most of these have now been fixed. Some more detail is given in (Types, structs and padding)[types_structs_padding.md] If you are unsure, ask!
+Some symbols in the data have been decompiled wrongly, being incorrectly separated from the previous symbol due to how it was accessed by the actor's functions. However, most of these have now been fixed. Some more detail is given in [Types, structs and padding](types_structs_padding.md) If you are unsure, ask!
 
 ## Inlining
 
