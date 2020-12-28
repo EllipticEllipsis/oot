@@ -35,7 +35,7 @@ cp -r build/ expected/
 ```
 from the main directory of the repository. You should end up with the folder structure `expected/build/...`.
 
-![Example of a diff](func_80A87B9C_diff1.png)
+![Example of a diff](images/func_80A87B9C_diff1.png)
 
 The colors have the following meanings:
 

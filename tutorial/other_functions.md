@@ -175,7 +175,7 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx) {
 
 The diff shows this doesn't match:
 
-![func_80A87B9C diff 1](func_80A87B9C_diff1.png)
+![func_80A87B9C diff 1](images/func_80A87B9C_diff1.png)
 
 It's not obvious why this doesn't match: the branching is correct, but it's loading stuff in the wrong order. Now is therefore a good time to introduce the permuter.
 
@@ -196,7 +196,7 @@ to produce suggestions. There are various arguments that can be used, of which t
 
 Suggestions are saved in the directory it imported the function into.
 
-![Permuter console output](permuter_console_output.png)
+![Permuter console output](images/permuter_console_output.png)
 
 The first suggestion looks plausible:
 ```C
@@ -235,7 +235,7 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx) {
 }
 ```
 
-![func_80A87B9C diff 2](func_80A87B9C_diff2.png)
+![func_80A87B9C diff 2](images/func_80A87B9C_diff2.png)
 
 Hooray, that worked. The function now matches (as you can check by running `make -j`). In this case we are lucky and got a couple of 0s almost immediately. This will often not be the case, and you may have to go through multiple iterations to improve things. Or you get more ideas for what to do without the permuter necessarily doing everything for you.
 
@@ -619,10 +619,11 @@ void func_80A87B1C(EnJj* this) {
 
 Sadly this doesn't match:
 
-![func_80A87B1C diff](func_80A87B1C_diff1.png)
+![func_80A87B1C diff 1](images/func_80A87B1C_diff1.png)
 
 You will also find that the permuter is essentially useless here: most solutions it offers look very fake. But there's already something a bit weird in here: why does it do `this->unk_30E & 0xFF` explicitly in the comparison? It turns out if you remove this, the function matches: the compiler does this calculation automatically when doing comparisons with `u8`s anyway.
 
+![func_80A87B1C diff 2](images/func_80A87B1C_diff2.png)
 
 ### `func_80A87D94`
 

@@ -355,7 +355,7 @@ vbindiff baserom.z64 zelda_ocarina_mq_dbg.z64
 ```
 In this, press `g` to open up goto position, and paste in the address `0xE3ED10` from the first important line of the `first_diff` output. This gives us the following:
 
-[vbindiff for data](vbindiff_data_1.png)
+[vbindiff for data](images/vbindiff_data_1.png)
 
 Notice that the numbers in the bottom pane is all shifted one word to the left. We therefore need some extra padding somewhere. The real issue is where. Thankfully the guess at the bottom gives us a hint: let's try just under `InitVars`. Just put a padding variable straight after them:
 
@@ -399,7 +399,7 @@ Map appears to have shifted just before D_80A88D40 (build/data/overlays/actors/z
 ```
 We've managed to get rid of one issue, but there's still another one. Looking in vbindiff again,
 
-[vbindiff data 2](vbindiff_data_2.png)
+[vbindiff data 2](images/vbindiff_data_2.png)
 
 we see that everything is shifted left by 2 words. Guessing based on the hint from `first_diff`, we put two words after the cutscene include:
 ```C

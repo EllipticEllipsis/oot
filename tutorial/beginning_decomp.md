@@ -10,7 +10,7 @@ Each actor has associated to it a data file and one assembly file per function. 
 
 The actor file starts off looking like:
 
-![Fresh actor file annotated](fresh_actor_file_annotated.png)
+![Fresh actor file annotated](images/fresh_actor_file_annotated.png)
 
 It is currently divided into six sections as follows:
 
@@ -30,7 +30,7 @@ It is currently divided into six sections as follows:
 
 The header file looks like this at the moment:
 
-![Fresh actor header](fresh_actor_header.png)
+![Fresh actor header](images/fresh_actor_header.png)
 
 The struct currently contains a variable that is the `Actor` struct, which all actors use one way or another, plus other items. Currently we don't know what those items are, so we have an array of chars as padding instead, just so the struct is the right size. As we understand the actor better, we will be able to gradually replace this padding with the actual variables that the actor uses.
 
@@ -56,7 +56,7 @@ The above is a rough ordering for the beginner. As you become more experienced, 
 
 ## Data
 
-![Fresh actor data](fresh_actor_data.png)
+![Fresh actor data](images/fresh_actor_data.png)
 
 Associated to each actor is a `.data` file, containing data that the actor uses. This ranges from spawn positions, to display lists, to even some cutscene data. Since the structure of the data is very inconsistent between actors, automatic importing has been very limited, so the vast majority must be done manually.
 
@@ -66,9 +66,12 @@ There are two ways of transfering the data into an actor: we can either
 
 Since Fig's video goes over the first of these, we will concentrate on the second. Thankfully this means we essentially don't have to do anything to the data yet. Nevertheless, it is often quite helpful to copy over at least some of the data and leave it commented out for later replacement. *Data must go in the same order as in the data file, and data is "all or nothing": you cannot only import some of it*.
 
+![Data copied in and commented out](images/data_inserted_commented_out.png)
+
 **WARNING** The way in which the data was extracted from the ROM means that there are sometimes "fake symbols" in the data, which have to be removed to avoid confusing the compiler. Thankfully it will turn out that this is not the case here, although there will be other data issues.
 
 (Sometimes it is useful to import the data in the middle of doing functions: you just have to choose an appropriate moment.)
+
 
 Some actors also have a `.bss` file. This is just data that is initialised to 0, and can be imported immediately.
 
@@ -88,9 +91,15 @@ $ ./tools/m2ctx.py <path_to_c_file>
 ```
 from the main directory of the repository. In this case, the C file is `src/overlays/actors/ovl_En_Jj/z_en_jj.c`. This generates a file called `ctx.c` in the main directory of the repository. Open this file in a text editor (Notepad will do) and copy the whole contents into the "Existing C source, preprocessed" box.
 
-Now, open the file containing the assembly for `EnJj_Init`. Copy the entire contents of this file into the upper box, labelled "MIPS assembly". Now, for Init (and also the other "main 4" functions `Destroy`, `Update` and `Draw`), the function's first argument is `Actor* thisx`. But we would like mips2c to use the fields in the actual actor struct; we can make it do this by deliberately changing the prototype of the `EnJj_Init` in the pasted context to have first argument `EnJj* this` instead.
+![Copying the context](images/ctx.png)
 
-![Changing init prototype](changing_init_prototype.png)
+Now, open the file containing the assembly for `EnJj_Init`. 
+
+![Copying the Init asm](images/init_asm.png)
+
+Copy the entire contents of this file into the upper box, labelled "MIPS assembly". Now, for Init (and also the other "main 4" functions `Destroy`, `Update` and `Draw`), the function's first argument is `Actor* thisx`. But we would like mips2c to use the fields in the actual actor struct; we can make it do this by deliberately changing the prototype of the `EnJj_Init` in the pasted context to have first argument `EnJj* this` instead.
+
+![Changing init prototype](images/changing_init_prototype.png)
 
 Now press "Decompile". This should produce C code:
 ```C
@@ -131,7 +140,7 @@ Now everything points to the right place, even though the argument of the functi
 
 While we are carrying out initial changes, you can also find-and-replace any instances of `(Actor *) this` by `&this->actor`. The function now looks like this:
 
-![Init after replacing (Actor*) this](init_after_replace_actorthis.png)
+![Init after replacing (images/Actor*) this](init_after_replace_actorthis.png)
 
 In the next sections, we shall sort out the various initialisation functions that occur in Init. There are several types, and one of the reasons we are using EnJj as the example is that it has several of the most common ones. A disadvantage of this actor is that it has an unusually complicated Init: we can see that it does three different things depending on the value of its params.
 
@@ -688,7 +697,7 @@ This gives the following:
     Large image, click to show.
 </summary>
 
-![Init diff 1](init_diff1.png)
+![Init diff 1](images/init_diff1.png)
 </details>
 
 The code we want is on the left, current code on the right. To spot where the function ends, either look for where stuff is added and subtracted from the stack pointer in successive lines, or for a
@@ -792,7 +801,7 @@ we see that the diff is nearly correct (note that `-3` lets you compare current 
     Large image, click to show.
 </summary>
 
-![Init diff 2](init_diff2.png)
+![Init diff 2](images/init_diff2.png)
 </details>
 
 except we still have some stack issues. Now that `temp_v0` is only used once, it looks fake. Eliminating it actually seems to make the stack worse. To fix this, we employ something that we have evidence that the developers did: namely, we make a copy of `globalCtx` (the theory is that they actually used `gameState` as an argument of the main 4 functions, just like we used `Actor* thisx` as the first argument. The quick way to do this is to change the top of the function to
@@ -805,7 +814,7 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
 
 It turns out that this is enough to completely fix the diff:
 
-![Init diff 2](init_diff3top.png)
+![Init diff 2](images/init_diff3top.png)
 (last two edits, only top shown for brevity)
 
 Everything *looks* fine, but we only know for sure when we run `make`. Thankfully doing so gives
