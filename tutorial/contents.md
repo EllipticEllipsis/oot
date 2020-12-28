@@ -1,6 +1,6 @@
 # Getting started
 
-## Introduction to decomp
+## [Introduction to decomp](introduction.md)
 - What we are doing
 - Structure of the code
 
