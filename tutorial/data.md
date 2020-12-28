@@ -10,9 +10,207 @@ Sometimes something between these two is appropriate: wait until the largest or 
 
 ## Data first
 
-Fig shows how to do this in his video. It is good for smaller actors with little data. It is not really suitable for EnJj because of the enormous section of data labelled as `D_80A88164`.
+<!-- Fig shows how to do this in his video.  -->
+This way is good for smaller actors with little data. It is not really suitable for EnJj, for example, because of the enormous section of data labelled as `D_80A88164`.
 
-An important thing to bear in mind is that data cannot be made static 
+An important thing to bear in mind is that data cannot be made static if it is used in an undecompiled file (i.e. one that is `#pragma`'d), so it is best to make everything static only after the whole actor is decompiled.
+
+### Example: `EnTg`
+
+We give a simple example of this approach with a small NPC actor, EnTg, that is, the spinning couple.
+
+The data file looks like
+
+<details>
+<summary>
+Large code block, click to show
+</summary>
+
+```
+.include "macro.inc"
+
+ # assembler directives
+ .set noat      # allow manual use of $at
+ .set noreorder # don't insert nops after branches
+ .set gp=64     # allow use of 64-bit general purpose registers
+
+.section .data
+
+.balign 16
+
+glabel D_80B18910
+ .word 0x0A000039, 0x20010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000100, 0x00140040, 0x00000000, 0x00000000
+glabel D_80B1893C
+ .word 0x00000000, 0x00000000, 0xFF000000
+glabel En_Tg_InitVars
+ .word 0x01AC0400, 0x00000009, 0x01820000, 0x0000020C
+.word EnTg_Init
+.word EnTg_Destroy
+.word EnTg_Update
+.word EnTg_Draw
+glabel D_80B18968
+ .word 0x00000000, 0x44480000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+
+
+```
+
+</details>
+
+We transfer this data into the actor file by pretending it is an array of words. The InitVars have already been processed and inserted into the C file, so just need to be uncommented. Data cannot change order, so the two pieces above the InitVars must stay there. At the end of this process, the top of the file will look like
+
+<details>
+<summary>
+Large code block, click to show
+</summary>
+
+```C
+/*
+ * File: z_en_tg.c
+ * Overlay: ovl_En_Tg
+ * Description: Honey & Darling
+ */
+
+#include "z_en_tg.h"
+
+#define FLAGS 0x00000009
+
+#define THIS ((EnTg*)thisx)
+
+void EnTg_Init(Actor* thisx, GlobalContext* globalCtx);
+void EnTg_Destroy(Actor* thisx, GlobalContext* globalCtx);
+void EnTg_Update(Actor* thisx, GlobalContext* globalCtx);
+void EnTg_Draw(Actor* thisx, GlobalContext* globalCtx);
+
+s32 D_80B18910[] = { 0x0A000039, 0x20010000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000100, 0x00140040, 0x00000000, 0x00000000 };
+
+s32 D_80B1893C[] = { 0x00000000, 0x00000000, 0xFF000000 };
+
+const ActorInit En_Tg_InitVars = {
+    ACTOR_EN_TG,
+    ACTORTYPE_NPC,
+    FLAGS,
+    OBJECT_MU,
+    sizeof(EnTg),
+    (ActorFunc)EnTg_Init,
+    (ActorFunc)EnTg_Destroy,
+    (ActorFunc)EnTg_Update,
+    (ActorFunc)EnTg_Draw,
+};
+
+s32 D_80B18968[] = { 0x00000000, 0x44480000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 };
+
+extern UNK_TYPE D_06005040;
+extern UNK_TYPE D_0600AE40;
+
+```
+
+</details>
+
+Now, open the file called `spec` in the base directory, find the section corresponding to EnTg:
+```
+beginseg
+    name "ovl_En_Tg"
+    include "build/src/overlays/actors/ovl_En_Tg/z_en_tg.o"
+    include "build/data/overlays/actors/z_en_tg.data.o"
+    include "build/data/overlays/actors/z_en_tg.reloc.o"
+endseg
+```
+and comment out the .data line, 
+```
+beginseg
+    name "ovl_En_Tg"
+    include "build/src/overlays/actors/ovl_En_Tg/z_en_tg.o"
+    //include "build/data/overlays/actors/z_en_tg.data.o"
+    include "build/data/overlays/actors/z_en_tg.reloc.o"
+endseg
+```
+to tell the compiler not to look for the data in that file any more. Now run `make -j`, and if you did both steps correctly, you should get `OK`.
+
+Now carry out the usual steps to decompile `Init`. The usual cleanup and struct population gets us to
+```C
+void EnTg_Init(Actor *thisx, GlobalContext *globalCtx) {
+    EnTg *this = THIS;
+
+    ActorShape_Init(&this->actor.shape, 0.0f, ActorShadow_DrawFunc_Circle, 28.0f);
+    SkelAnime_InitFlex(globalCtx, &this->skelAnime, &D_0600AE40, &D_06005040, 0, 0, 0);
+    Collider_InitCylinder(globalCtx, &this->collider);
+    Collider_SetCylinder(globalCtx, &this->collider, &this->actor, (ColliderCylinderInit *) D_80B18910);
+    func_80061EFC(&this->actor.colChkInfo, NULL, (CollisionCheckInfoInit2 *) D_80B1893C);
+    this->actor.unk_1F = 6;
+    Actor_SetScale(&this->actor, 0.01f);
+    this->actionFunc = func_80B185C0;
+    this->unk_208 = globalCtx->state.frames & 1;
+}
+```
+and it remains to deal with the data. mips2c has told us what the types should be. We run `colliderinit` on `D_80B18910` as usual, which gives
+```
+$ ./tools/overlayhelpers/colliderinit.py 80B18910 ColliderCylinderInit
+ovl_En_Tg: Rom 00ECE1F0:00ECE910 VRam 80B18360:80B18A80 Offset 0005B0
+
+static ColliderCylinderInit sCylinderInit =
+{
+    { COLTYPE_UNK10, 0x00, 0x00, 0x39, 0x20, COLSHAPE_CYLINDER },
+    { 0x00, { 0x00000000, 0x00, 0x00 }, { 0x00000000, 0x00, 0x00 }, 0x00, 0x00, 0x01 },
+    { 20, 64, 0, { 0, 0, 0 } },
+};
+```
+
+Copy this in below `D_80B18910`, delete the original words of data, and for now, remove `static` (in case it's used in other files that have not been decompiled), change the name back to `D_80B18910`, and put `sCylinderInit` commented out above it:
+```C
+// sCylinderInit
+ColliderCylinderInit D_80B18910 =
+{
+    { COLTYPE_UNK10, 0x00, 0x00, 0x39, 0x20, COLSHAPE_CYLINDER },
+    { 0x00, { 0x00000000, 0x00, 0x00 }, { 0x00000000, 0x00, 0x00 }, 0x00, 0x00, 0x01 },
+    { 20, 64, 0, { 0, 0, 0 } },
+};
+```
+
+For the `CollisionCheckInfoInit2`, we don't have a script to separate it, but you can look in other files to see that it should be separated as
+```C
+// sColChkInit
+CollisionCheckInfoInit2 D_80B1893C = { 0, 0, 0, 0, 0xFF };
+```
+
+One more thing needs to change: since both are no longer arrays, we need to make the uses in the functions pointers:
+```C
+Collider_SetCylinder(globalCtx, &this->collider, &this->actor, &D_80B18910);
+func_80061EFC(&this->actor.colChkInfo, NULL, &D_80B1893C);
+```
+
+A quick check of the diff shows that we just need to put the action function set to last, and it matches.
+
+Following the function tree as usual, we find the only other place any data is used is in `func_80B1871C`. From its use in `EnTg_Draw`, we realise that this is a `PostLimbDraw` function. Giving mips2c the correct prototype, it comes out as
+```C
+void func_80B1871C(GlobalContext* globalCtx, s32 limbIndex, Gfx** dList, Vec3s* rot, void* thisx) {
+    ? sp18;
+
+    sp18.unk0 = (s32) D_80B18968->unk0;
+    sp18.unk4 = (s32) D_80B18968[1];
+    sp18.unk8 = (s32) D_80B18968[2];
+    if (limbIndex == 9) {
+        Matrix_MultVec3f((Vec3f *) &sp18, thisx + 0x38);
+    }
+}
+```
+which clearly doesn't like the words we fed it. We see that `sp18` should be a `Vec3f` from the cast in the `Matrix_MultVec3f`, so the last three words are padding (a `Vec3f` has size `0xC`, and it's not using it like an array), and we can convert it to
+```C
+Vec3f D_80B18968 = { 0.0f, 800.0f, 0.0f };
+```
+and the function matches as
+```C
+void func_80B1871C(GlobalContext* globalCtx, s32 limbIndex, Gfx** dList, Vec3s* rot, void* thisx) {
+    EnTg* this = THIS;
+
+    Vec3f sp18 = D_80B18968;
+    
+    if (limbIndex == 9) {
+        Matrix_MultVec3f(&sp18, &this->actor.posRot2.pos);
+    }
+}
+```
+(we can see from the assembly doing `lw` and `sw` rather than `lwc1` and `swc1` that it is doing a struct copy, rather than setting it componentwise).
+
 
 ## Extern and data last
 
@@ -109,7 +307,7 @@ Finally, we have a script to convert the cutscene data into macros, namely `csdi
 
 <details>
 <summary>
-    Long code block, click to view
+    (Very) long code block, click to view
 </summary>
 
 ```
@@ -425,10 +623,12 @@ Hooray, we won!
 
 ## Fake symbols
 
+Some symbols in the data have been decompiled wrongly, being incorrectly separated from the previous symbol due to how it was accessed by the actor's functions. However, most of these have now been fixed. Some more detail is given in (Types, structs and padding)[types_structs_padding.md] If you are unsure, ask!
 
 ## Inlining
 
+After the file is finished, it is possible to move some static data into functions. This requires that:
+1. The data is used in only one function
+2. The ordering of the data can be maintained
 
-
-## Padding
-
+Additionally, we prefer to keep larger data (more than a line or two) out of functions anyway.
