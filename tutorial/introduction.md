@@ -2,7 +2,7 @@
 
 In this project, we are decompiling The Legend of Zelda: Ocarina of Time. This means that we take the assembly language that is on the cartridge,
 
-```MIPS
+```ASM
 glabel func_80A13098
 /* 00028 80A13098 8482001C */  lh      $v0, 0x001C($a0)           ## 0000001C
 /* 0002C 80A1309C 24010004 */  addiu   $at, $zero, 0x0004         ## $at = 00000004
