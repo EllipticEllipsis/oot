@@ -157,6 +157,8 @@ void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx) {
 
 matches apart from a couple of stack differences. This can be resolved by giving it `GlobalContext* globalCtx = globalCtx2;` at the top of the function and changing the second argument to `globalCtx2` as usual.
 
+We have enums for the last argument of the matrix functions: `0` is `MTXMODE_NEW`, `1` is `MTXMODE_APPLY`.
+
 Lastly, the penultimate and antepenultimate arguments of `SkelAnime_DrawFlexOpa` are actually pointers to functions, so they should be `NULL` instead of `0`.
 
 
