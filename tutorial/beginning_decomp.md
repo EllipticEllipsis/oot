@@ -317,7 +317,7 @@ temp_a1 = this->unk_164;
 ...
 sp44 = (DynaCollisionContext *) temp_a1;
 SkelAnime_InitFlex(globalCtx, (SkelAnime *) temp_a1, (FlexSkeletonHeader *) &D_0600B9A8, (AnimationHeader *) &D_06001F4C, this + 0x1A8, this + 0x22C, 0x16);
-SkelAnime_ChangeAnimDefaultRepeat((SkelAnime *) sp44, (AnimationHeader *) &D_06001F4C);
+Animation_PlayLoop((SkelAnime *) sp44, (AnimationHeader *) &D_06001F4C);
 ```
 
 (Both of the temps are likely to be fake.)
@@ -357,7 +357,7 @@ extern UNK_TYPE D_0600BA8C;
 and removing the temps,
 ```C
 SkelAnime_InitFlex(globalCtx, &this->skelAnime, &D_0600B9A8, &D_06001F4C, this->limbDrawTable, this->transitionDrawTable, 22);
-SkelAnime_ChangeAnimDefaultRepeat(&this->skelAnime, &D_06001F4C);
+Animation_PlayLoop(&this->skelAnime, &D_06001F4C);
 ```
 
 ### More struct variables
@@ -428,7 +428,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     if (temp_v0 == -1) {
         // sp44 = (DynaCollisionContext *) temp_a1;
         SkelAnime_InitFlex(globalCtx, &this->skelAnime, &D_0600B9A8, &D_06001F4C, this->limbDrawTable, this->transitionDrawTable, 22);
-        SkelAnime_ChangeAnimDefaultRepeat(&this->skelAnime, &D_06001F4C);
+        Animation_PlayLoop(&this->skelAnime, &D_06001F4C);
         this->unk_30A = 0;
         this->unk_30E = 0;
         this->unk_30F = 0;
@@ -623,7 +623,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     if (temp_v0 == -1) {
         // sp44 = (DynaCollisionContext *) temp_a1;
         SkelAnime_InitFlex(globalCtx, &this->skelAnime, &D_0600B9A8, &D_06001F4C, this->limbDrawTable, this->transitionDrawTable, 22);
-        SkelAnime_ChangeAnimDefaultRepeat(&this->skelAnime, &D_06001F4C);
+        Animation_PlayLoop(&this->skelAnime, &D_06001F4C);
         this->unk_30A = 0;
         this->unk_30E = 0;
         this->unk_30F = 0;
@@ -747,7 +747,7 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx) {
         case -1:
             SkelAnime_InitFlex(globalCtx, &this->skelAnime, &D_0600B9A8, &D_06001F4C, this->limbDrawTable,
                                this->transitionDrawTable, 22);
-            SkelAnime_ChangeAnimDefaultRepeat(&this->skelAnime, &D_06001F4C);
+            Animation_PlayLoop(&this->skelAnime, &D_06001F4C);
             this->unk_30A = 0;
             this->unk_30E = 0;
             this->unk_30F = 0;

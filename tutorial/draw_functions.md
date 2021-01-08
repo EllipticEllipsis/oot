@@ -43,7 +43,7 @@ void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx) {
     sp4C = temp_a1;
     Graph_OpenDisps(&sp3C, temp_a1, (const char *) "../z_en_jj.c", 0x36F);
     func_800943C8(globalCtx->state.gfxCtx);
-    Matrix_Translate(0.0f, (cosf(this->skelAnime.animCurrentFrame * 0.076624215f) * 10.0f) - 10.0f, 0.0f, (u8)1U);
+    Matrix_Translate(0.0f, (cosf(this->skelAnime.curFrame * 0.076624215f) * 10.0f) - 10.0f, 0.0f, (u8)1U);
     Matrix_Scale(10.0f, 10.0f, 10.0f, (u8)1U);
     temp_v1 = temp_a1->polyOpa.p;
     temp_a1->polyOpa.p = temp_v1 + 8;
@@ -51,7 +51,7 @@ void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx) {
     temp_a0 = *(&D_80A88CFC + (this->unk_30E * 4));
     temp_v1->words.w1 = (temp_a0 & 0xFFFFFF) + gSegments[(u32) (temp_a0 * 0x10) >> 0x1C] + 0x80000000;
     sp18 = this;
-    SkelAnime_DrawFlexOpa(globalCtx, this->skelAnime.skeleton, this->skelAnime.limbDrawTbl, (s32) this->skelAnime.dListCount, 0, 0);
+    SkelAnime_DrawFlexOpa(globalCtx, this->skelAnime.skeleton, this->skelAnime.jointTable, (s32) this->skelAnime.dListCount, 0, 0);
     Graph_CloseDisps(&sp3C, globalCtx->state.gfxCtx, (const char *) "../z_en_jj.c", 0x382);
 }
 ```
@@ -143,10 +143,10 @@ void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx) {
 
     OPEN_DISPS(globalCtx->state.gfxCtx, "../z_en_jj.c", 879);
     func_800943C8(globalCtx->state.gfxCtx);
-    Matrix_Translate(0.0f, (cosf(this->skelAnime.animCurrentFrame * (M_PI/41.0f)) * 10.0f) - 10.0f, 0.0f, 1);
+    Matrix_Translate(0.0f, (cosf(this->skelAnime.curFrame * (M_PI/41.0f)) * 10.0f) - 10.0f, 0.0f, 1);
     Matrix_Scale(10.0f, 10.0f, 10.0f, 1);
     gSPSegment(POLY_OPA_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(D_80A88CFC[this->unk_30E]));
-    SkelAnime_DrawFlexOpa(globalCtx, this->skelAnime.skeleton, this->skelAnime.limbDrawTbl,
+    SkelAnime_DrawFlexOpa(globalCtx, this->skelAnime.skeleton, this->skelAnime.jointTable,
      this->skelAnime.dListCount, 0, 0, this);
     CLOSE_DISPS(globalCtx->state.gfxCtx, "../z_en_jj.c", 898);
 }

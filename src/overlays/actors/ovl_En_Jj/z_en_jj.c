@@ -83,7 +83,7 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
         case -1:
             SkelAnime_InitFlex(globalCtx, &this->skelAnime, &D_0600B9A8, &D_06001F4C, this->limbDrawTable,
                                this->transitionDrawTable, 22);
-            SkelAnime_ChangeAnimDefaultRepeat(&this->skelAnime, &D_06001F4C);
+            Animation_PlayLoop(&this->skelAnime, &D_06001F4C);
             this->unk_30A = 0;
             this->unk_30E = 0;
             this->unk_30F = 0;
@@ -156,7 +156,7 @@ void func_80A87B1C(EnJj* this) {
             if (this->unk_310 > 0) {
                 this->unk_310--;
             } else {
-                this->unk_30F = Math_Rand_S16Offset(20, 20);
+                this->unk_30F = Rand_S16Offset(20, 20);
                 this->unk_310 = this->unk_311;
             }
         }
@@ -177,7 +177,7 @@ void func_80A87B9C(EnJj* this, GlobalContext* globalCtx) {
 
 // #pragma GLOBAL_ASM("asm/non_matchings/overlays/actors/ovl_En_Jj/func_80A87BEC.s")
 void func_80A87BEC(EnJj* this, GlobalContext* globalCtx) {
-    if (this->dyna.actor.xzDistFromLink < 300.0f) {
+    if (this->dyna.actor.xzDistToLink < 300.0f) {
         func_80A87800(this, func_80A87B9C);
     }
 }
@@ -219,7 +219,7 @@ void func_80A87D94(EnJj* this, GlobalContext* globalCtx) {
         case 1:
             if ((this->unk_30A & 2) != 0) {
                 this->unk_30E = 0;
-                this->unk_30F = Math_Rand_S16Offset(20, 20);
+                this->unk_30F = Rand_S16Offset(20, 20);
                 this->unk_310 = 0;
                 this->unk_311 = 0;
                 this->unk_30A ^= 2;
@@ -277,14 +277,14 @@ void EnJj_Update(Actor* thisx, GlobalContext* globalCtx) {
         func_80A87D94(this, globalCtx);
     } else {
         this->actionFunc(this, globalCtx);
-        if (this->skelAnime.animCurrentFrame == 41.0f) {
+        if (this->skelAnime.curFrame == 41.0f) {
             Audio_PlayActorSound2(&this->dyna.actor, NA_SE_EV_JABJAB_GROAN);
         }
     }
     func_80A87B1C(this);
-    SkelAnime_FrameUpdateMatrix(&this->skelAnime);
+    SkelAnime_Update(&this->skelAnime);
     Actor_SetScale(&this->dyna.actor, 0.087f);
-    this->skelAnime.limbDrawTbl[10].z = this->unk_308;
+    this->skelAnime.jointTable[10].z = this->unk_308;
 }
 
 // #pragma GLOBAL_ASM("asm/non_matchings/overlays/actors/ovl_En_Jj/EnJj_Draw.s")
@@ -295,10 +295,10 @@ void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx2) {
 
     OPEN_DISPS(globalCtx->state.gfxCtx, "../z_en_jj.c", 879);
     func_800943C8(globalCtx->state.gfxCtx);
-    Matrix_Translate(0.0f, (cosf(this->skelAnime.animCurrentFrame * (M_PI/41.0f)) * 10.0f) - 10.0f, 0.0f, 1);
+    Matrix_Translate(0.0f, (cosf(this->skelAnime.curFrame * (M_PI/41.0f)) * 10.0f) - 10.0f, 0.0f, 1);
     Matrix_Scale(10.0f, 10.0f, 10.0f, 1);
     gSPSegment(POLY_OPA_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(D_80A88CFC[this->unk_30E]));
-    SkelAnime_DrawFlexOpa(globalCtx, this->skelAnime.skeleton, this->skelAnime.limbDrawTbl,
+    SkelAnime_DrawFlexOpa(globalCtx, this->skelAnime.skeleton, this->skelAnime.jointTable,
      this->skelAnime.dListCount, 0, 0, this);
     CLOSE_DISPS(globalCtx->state.gfxCtx, "../z_en_jj.c", 898);
 }

@@ -95,7 +95,7 @@ also matches, with no need for the `GlobalContext*` temp.
 Of the two functions we have available, `func_80A87BEC` is shorter, so we do that next. Since we haven't changed any types or header file information, there is no need to remake the context. mips2c gives
 ```C
 void func_80A87BEC(EnJj *this, GlobalContext *globalCtx) {
-    if (this->dyna.actor.xzDistFromLink < 300.0f) {
+    if (this->dyna.actor.xzDistToLink < 300.0f) {
         func_80A87800(this, &func_80A87B9C);
     }
 }
@@ -108,7 +108,7 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx);
 
 // #pragma GLOBAL_ASM("asm/non_matchings/overlays/actors/ovl_En_Jj/func_80A87BEC.s")
 void func_80A87BEC(EnJj *this, GlobalContext *globalCtx) {
-    if (this->dyna.actor.xzDistFromLink < 300.0f) {
+    if (this->dyna.actor.xzDistToLink < 300.0f) {
         func_80A87800(this, func_80A87B9C);
     }
 }
@@ -499,20 +499,20 @@ void EnJj_Update(EnJj *this, GlobalContext *globalCtx) {
         func_80A87D94();
     } else {
         this->actionFunc(this);
-        if (this->skelAnime.animCurrentFrame == 41.0f) {
+        if (this->skelAnime.curFrame == 41.0f) {
             Audio_PlayActorSound2((Actor *) this, (u16)0x28B6U);
         }
     }
     func_80A87B1C(this);
-    SkelAnime_FrameUpdateMatrix(&this->skelAnime);
+    SkelAnime_Update(&this->skelAnime);
     Actor_SetScale((Actor *) this, 0.087f);
-    this->skelAnime.limbDrawTbl->unk40 = (s16) this->unk_308;
+    this->skelAnime.jointTable->unk40 = (s16) this->unk_308;
 }
 ```
 
 This has several problems: firstly, the action function is called with the wrong argument. We should thus be suspicious of all the functions this actor calls, and decompile them mith mips2c without context if necessary, if only to find out how many arguments they have. Starting with `func_80A87B1C` if only because it is shorter, mips2c tells us that it does indeed only take one argument. On the other hand, we find that `func_80A87D94` definitely takes `EnJj* this, GlobalContext* globalCtx` as arguments. Again, put these prototypes at the function locations above to avoid compiler warnings.
 
-`unk40` of an array of `Vec3s`s is `0x40 = 0x6 * 0xA + 0x4`, so is actually `this->skelAnime.limbDrawTbl[10].z`
+`unk40` of an array of `Vec3s`s is `0x40 = 0x6 * 0xA + 0x4`, so is actually `this->skelAnime.jointTable[10].z`
 
 Lastly, what is `globalCtx->unk1D94`? It is at `globalCtx->csCtx + 0x30`, or `globalCtx->csCtx.npcActions + 0x8`, which is `globalCtx->csCtx.npcActions[2]` since this is an array of pointers. Hence it is a pointer, and so should be compared to `NULL`. Looking up the sfx Id again, we end up with
 ```C
@@ -523,14 +523,14 @@ void EnJj_Update(Actor *thisx, GlobalContext *globalCtx) {
         func_80A87D94(this, globalCtx);
     } else {
         this->actionFunc(this, globalCtx);
-        if (this->skelAnime.animCurrentFrame == 41.0f) {
+        if (this->skelAnime.curFrame == 41.0f) {
             Audio_PlayActorSound2(&this->dyna.actor, NA_SE_EV_JABJAB_GROAN);
         }
     }
     func_80A87B1C(this);
-    SkelAnime_FrameUpdateMatrix(&this->skelAnime);
+    SkelAnime_Update(&this->skelAnime);
     Actor_SetScale(&this->dyna.actor, 0.087f);
-    this->skelAnime.limbDrawTbl[10].z = this->unk_308;
+    this->skelAnime.jointTable[10].z = this->unk_308;
 }
 ```
 which matches.
@@ -564,7 +564,7 @@ void func_80A87B1C(EnJj *this) {
             return;
         }
         this = this;
-        this->unk_30F = Math_Rand_S16Offset((u16)0x14, (u16)0x14);
+        this->unk_30F = Rand_S16Offset((u16)0x14, (u16)0x14);
         this->unk_310 = (s8) (u8) this->unk_311;
     }
 }
@@ -592,7 +592,7 @@ void func_80A87B1C(EnJj *this) {
             return;
         }
         this = this;
-        this->unk_30F = Math_Rand_S16Offset((u16)0x14, (u16)0x14);
+        this->unk_30F = Rand_S16Offset((u16)0x14, (u16)0x14);
         this->unk_310 = this->unk_311;
     }
 }
@@ -609,7 +609,7 @@ void func_80A87B1C(EnJj* this) {
             if (this->unk_310 > 0) {
                 this->unk_310--;
             } else {
-                this->unk_30F = Math_Rand_S16Offset(20, 20);
+                this->unk_30F = Rand_S16Offset(20, 20);
                 this->unk_310 = this->unk_311;
             }
         }
@@ -676,7 +676,7 @@ void func_80A87D94(EnJj *this, GlobalContext *globalCtx) {
         phi_v1 = temp_v1_3;
         if ((temp_v1_3 & 2) != 0) {
             this->unk_30E = 0;
-            this->unk_30F = Math_Rand_S16Offset((u16)0x14, (u16)0x14);
+            this->unk_30F = Rand_S16Offset((u16)0x14, (u16)0x14);
             this->unk_310 = 0;
             temp_t9 = this->unk_30A ^ 2;
             this->unk_311 = 0;
@@ -723,7 +723,7 @@ void func_80A87D94(EnJj *this, GlobalContext *globalCtx) {
 			phi_v1 = temp_v1_3;
 			if ((temp_v1_3 & 2) != 0) {
 				this->unk_30E = 0;
-				this->unk_30F = Math_Rand_S16Offset((u16)0x14, (u16)0x14);
+				this->unk_30F = Rand_S16Offset((u16)0x14, (u16)0x14);
 				this->unk_310 = 0;
 				temp_t9 = this->unk_30A ^ 2;
 				this->unk_311 = 0;
@@ -787,7 +787,7 @@ void func_80A87D94(EnJj* this, GlobalContext* globalCtx) {
         case 1:
             if ((this->unk_30A & 2) != 0) {
                 this->unk_30E = 0;
-                this->unk_30F = Math_Rand_S16Offset(20, 20);
+                this->unk_30F = Rand_S16Offset(20, 20);
                 this->unk_310 = 0;
                 this->unk_311 = 0;
                 this->unk_30A ^= 2;
