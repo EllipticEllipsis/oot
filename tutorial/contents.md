@@ -5,14 +5,14 @@
 - Structure of the code
 
 ## Pre-decompilation
-- Building the repo (read the document)
+- Building the repo (read the README)
 - Reference for how we use git and github in this project (forks, git commands, pull requests)
-- Using e.g. VSCode (watch Fig's video after this)
+- Most of us use VSCode. (You can watch Fig's video to get an idea of how this can be used)
 - Choosing a first actor
 
 ## Decompilation
 
-- [Begining decompolation: order, Init and the actor struct](beginning_decomp.md)
+- [Begining decompilation: order, Init and the actor struct](beginning_decomp.md)
 	- order of decompilation
 	- Init and common actor features
 		- Initchains

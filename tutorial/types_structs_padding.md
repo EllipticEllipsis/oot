@@ -12,8 +12,8 @@ The following are the common data types used everywhere:
 | Name  | Size            | Comment        |
 | ----  | -----           | --------       |
 | char  | 1 byte          | character      |
-| u8    | 1 byte          | unsigned char  |
-| s8    | 1 byte          | signed char    |
+| u8    | 1 byte          | unsigned byte  |
+| s8    | 1 byte          | signed byte    |
 | u16   | 2 bytes         | unsigned short | 
 | s16   | 2 bytes         | signed short   |
 | u32   | 4 bytes/1 word  | unsigned int   |
@@ -21,6 +21,11 @@ The following are the common data types used everywhere:
 | void* | 4 bytes/1 word  | pointer        |
 
 A pointer is sometimes mistaken for an s32. s32 is the default thing to use in the absence of any other information about the data.
+
+Useful data for guessing types:
+- u8 is about 7 times more common than s8 (so the tutorial is a bit misleading)
+- s16 is about 16 times more common than u16
+- s32 is about 8 times more common than u32
 
 Another useful thing to put here: the prototype for an action function is
 ```C

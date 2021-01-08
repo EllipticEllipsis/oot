@@ -103,9 +103,9 @@ glabel D_80A88CFC
 .word 0x06007698, 0x06007A98, 0x06007E98, 0x00000000, 0x00000000
 ```
 
-The first three words look like pointers to assets in the actor segment, which would make sense if we're looking for textures to draw. The last two words are 0, which is strange. A check in the rest of the actor file shows that `unk_30E` only takes the values `0,1,2`. We conclude that the last two words are just padding, and can be removed. Because this data is used in a graphics macro, it will be a displaylist. We therefore set it up to be an array of pointers to Gfx:
+The first three words look like pointers to assets in the actor segment, which would make sense if we're looking for textures to draw. The last two words are 0, which is strange. A check in the rest of the actor file shows that `unk_30E` only takes the values `0,1,2`. We conclude that the last two words are just padding, and can be removed. Because this data is used in a graphics macro, it will be either a displaylist or a texture. We therefore set it up to be an array of unknown pointers for now:
 ```C
-extern Gfx* D_80A88CFC[];
+extern UNK_PTR D_80A88CFC[];
 // static Gfx* D_80A88CFC[] = { 0x06007698, 0x06007A98, 0x06007E98, }
 ```
 
@@ -117,6 +117,7 @@ and the whole macro is
 ```C
 gSPSegment(POLY_OPA_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(D_80A88CFC[this->unk_30E]));
 ```
+The contents of a desegmentation macro used like this are almost always textures in this context, so we can replace `UNK_PTR` by `u64*`, the type for textures.
 
 You repeat this for every block in the function.
 
@@ -136,6 +137,8 @@ Once you've replaced all the blocks and the open and close with macros, you proc
 
 Two last things: the last argument of the matrix functions tells the compiler whether to use the previously stored matrix or not, so we have the enums `MTXMODE_NEW` and `MTXMODE_APPLY` for these. And the rather weird-looking float `0.076624215f` is, of all things, `(M_PI/41.0f)` (try Wolfram Alpha for these things, and if that doesn't produce anything sensible, ask in Discord).
 
+(The actual reason is probably that the animation is 41 frames long, but you won't necessarily spot this sort of thing for most floats)
+
 After all that, it turns out that
 ```C
 void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx) {
@@ -153,6 +156,8 @@ void EnJj_Draw(Actor *thisx, GlobalContext *globalCtx) {
 ```
 
 matches apart from a couple of stack differences. This can be resolved by giving it `GlobalContext* globalCtx = globalCtx2;` at the top of the function and changing the second argument to `globalCtx2` as usual.
+
+Lastly, the penultimate and antepenultimate arguments of `SkelAnime_DrawFlexOpa` are actually pointers to functions, so they should be `NULL` instead of `0`.
 
 
 ## More examples: OverrideLimbDraw and PostLimbDraw

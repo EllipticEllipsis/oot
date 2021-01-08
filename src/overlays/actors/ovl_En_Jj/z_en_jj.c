@@ -56,7 +56,7 @@ static InitChainEntry sInitChain[] = {
 
 static Vec3f D_80A88CF0 = { -1589.0f, 53.0f, -43.0f };
 
-static Gfx* D_80A88CFC[] = { 0x06007698, 0x06007A98, 0x06007E98, };
+static u64* D_80A88CFC[] = { 0x06007698, 0x06007A98, 0x06007E98, };
 
 extern UNK_TYPE D_06000A1C;
 extern UNK_TYPE D_06001830;

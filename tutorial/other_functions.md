@@ -492,7 +492,7 @@ Again we have run out of action functions. The rules suggest that we now look at
 
 ## Update
 
-Update runs every frame and updates the properties of the function, and runs the action functions once per frame. As before we change the first argument to `EnJj* this` to get it to use our actor's struct. mips2c gives
+Update runs every frame and updates the properties of the actor, and usually runs the action functions once per frame. As before we change the first argument to `EnJj* this` to get it to use our actor's struct. mips2c gives
 ```C
 void EnJj_Update(EnJj *this, GlobalContext *globalCtx) {
     if ((globalCtx->csCtx.state != 0) && (globalCtx->unk1D94 != 0)) {
@@ -510,7 +510,7 @@ void EnJj_Update(EnJj *this, GlobalContext *globalCtx) {
 }
 ```
 
-This has several problems: firstly, the action function is called with the wrong argument. We should thus be suspicious of all the functions this actor calls, and decompile them mith mips2c without context if necessary, if only to find out how many arguments they have. Starting with `func_80A87B1C` if only because it is shorter, mips2c tells us that it does indeed only take one argument. On the other hand, we find that `func_80A87D94` definitely takes `EnJj* this, GlobalContext* globalCtx` as arguments. Again, put these prototypes at the function locations above to avoid compiler warnings.
+This has several problems: firstly, the action function is called with the wrong argument. We should thus be suspicious of previous functions this actor calls, and decompile them mith mips2c without context if necessary, if only to find out how many arguments they have. We find that `func_80A87D94` definitely takes `EnJj* this, GlobalContext* globalCtx` as arguments. Again, put this prototype at the function location above to avoid compiler warnings.
 
 `unk40` of an array of `Vec3s`s is `0x40 = 0x6 * 0xA + 0x4`, so is actually `this->skelAnime.jointTable[10].z`
 
