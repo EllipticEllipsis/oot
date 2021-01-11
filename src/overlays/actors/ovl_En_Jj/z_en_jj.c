@@ -74,7 +74,7 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
     GlobalContext* globalCtx = globalCtx2;
     EnJj* this = THIS;
 
-    s32 sp4C = 0;
+    CollisionHeader* sp4C = NULL;
 
     Actor_ProcessInitChain(&this->dyna.actor, sInitChain);
     ActorShape_Init(&this->dyna.actor.shape, 0.0f, NULL, 0.0f);
