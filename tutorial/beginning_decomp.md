@@ -85,8 +85,8 @@ The first stage of decompilation is done by a program called mips2c or mips_to_c
 
 The web version of mips2c can be found [here](https://simonsoftware.se/other/mips_to_c.py). There is also a downloadable version, but let's just use the online one for now.
 
-Since the actor depends on the rest of the codebase, we can't expect to get much intelligible out of mips2c without giving it some context. We make this using a Python script in the `tools` folder called `m2ctx.py`, so run
-```sh
+Since the actor depends on the rest of the codebase, we can't expect to get much intelligible out of mips2c without giving it some context. We make this using a Python script in the `tools` directory called `m2ctx.py`, so run
+```
 $ ./tools/m2ctx.py <path_to_c_file>
 ```
 from the main directory of the repository. In this case, the C file is `src/overlays/actors/ovl_En_Jj/z_en_jj.c`. This generates a file called `ctx.c` in the main directory of the repository. Open this file in a text editor (Notepad will do) and copy the whole contents into the "Existing C source, preprocessed" box.
@@ -104,7 +104,7 @@ Copy the entire contents of this file into the upper box, labelled "MIPS assembl
 Now press "Decompile". This should produce C code:
 ```C
 void EnJj_Init(EnJj *this, GlobalContext *globalCtx) {
-    s32 sp4C;
+    CollisionHeader *sp4C;
     DynaCollisionContext *sp44;
     DynaCollisionContext *temp_a1;
     DynaCollisionContext *temp_a1_2;
@@ -112,12 +112,12 @@ void EnJj_Init(EnJj *this, GlobalContext *globalCtx) {
     char *temp_v0_2;
     s16 temp_v0;
 
-    sp4C = 0;
+    sp4C = NULL;
     Actor_ProcessInitChain((Actor *) this, &D_80A88CE0);
     ActorShape_Init(&this->actor.shape, 0.0f, NULL, 0.0f);
     temp_v0 = this->actor.params;
     temp_a1 = this + 0x164;
-	...
+	[...]
 ```
 
 Typically for all buth the simplest functions, there is a lot that needs fixing before we are anywhere near seeing how close we are to the original code. You will notice that mips2c creates a lot of temporary variables. Usually most of these will turn out to not be real, and we need to remove the right ones to get the code to match.
@@ -140,7 +140,79 @@ Now everything points to the right place, even though the argument of the functi
 
 While we are carrying out initial changes, you can also find-and-replace any instances of `(Actor *) this` by `&this->actor`. The function now looks like this:
 
-![Init after replacing (images/Actor*) this](init_after_replace_actorthis.png)
+<details>
+<summary>
+    Large code block, click to show.
+</summary>
+
+```C
+void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
+    EnJj* this = THIS;
+
+    CollisionHeader *sp4C;
+    DynaCollisionContext *sp44;
+    DynaCollisionContext *temp_a1;
+    DynaCollisionContext *temp_a1_2;
+    DynaCollisionContext *temp_a1_3;
+    char *temp_v0_2;
+    s16 temp_v0;
+
+    sp4C = NULL;
+    Actor_ProcessInitChain(&this->actor, &D_80A88CE0);
+    ActorShape_Init(&this->actor.shape, 0.0f, NULL, 0.0f);
+    temp_v0 = this->actor.params;
+    temp_a1 = this + 0x164;
+    if (temp_v0 == -1) {
+        sp44 = temp_a1;
+        SkelAnime_InitFlex(globalCtx, (SkelAnime *) temp_a1, (FlexSkeletonHeader *) &D_0600B9A8, (AnimationHeader *) &D_06001F4C, this + 0x1A8, this + 0x22C, 0x16);
+        Animation_PlayLoop((SkelAnime *) sp44, (AnimationHeader *) &D_06001F4C);
+        this->unk30A = (u16)0;
+        this->unk30E = (u8)0;
+        this->unk30F = (u8)0;
+        this->unk310 = (u8)0;
+        this->unk311 = (u8)0;
+        if ((*(&gSaveContext + 0xEDA) & 0x400) != 0) {
+            func_80A87800(this, &func_80A87BEC);
+        } else {
+            func_80A87800(this, &func_80A87C30);
+        }
+        this->unk300 = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->actor, globalCtx, (u16)0x5A, this->actor.posRot.pos.x - 10.0f, this->actor.posRot.pos.y, this->actor.posRot.pos.z, 0, (?32) this->actor.posRot.rot.y, 0, 0);
+        DynaPolyActor_Init((DynaPolyActor *) this, 0);
+        CollisionHeader_GetVirtual((void *) &D_06000A1C, &sp4C);
+        this->unk_14C = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->actor, sp4C);
+        temp_a1_3 = this + 0x2B0;
+        sp44 = temp_a1_3;
+        Collider_InitCylinder(globalCtx, (ColliderCylinder *) temp_a1_3);
+        Collider_SetCylinder(globalCtx, (ColliderCylinder *) temp_a1_3, &this->actor, &D_80A88CB4);
+        this->actor.colChkInfo.mass = 0xFF;
+        return;
+    }
+    if (temp_v0 == 0) {
+        DynaPolyActor_Init((DynaPolyActor *) this, 0);
+        CollisionHeader_GetVirtual((void *) &D_06001830, &sp4C);
+        temp_a1_2 = &globalCtx->colCtx.dyna;
+        sp44 = temp_a1_2;
+        temp_v0_2 = DynaPoly_SetBgActor(globalCtx, temp_a1_2, &this->actor, sp4C);
+        this->unk_14C = temp_v0_2;
+        func_8003ECA8(globalCtx, temp_a1_2, (s32) temp_v0_2);
+        this->actor.update = &func_80A87F44;
+        this->actor.draw = NULL;
+        Actor_SetScale(&this->actor, 0.087f);
+        return;
+    }
+    if (temp_v0 != 1) {
+        return;
+    }
+    DynaPolyActor_Init((DynaPolyActor *) this, 0);
+    CollisionHeader_GetVirtual((void *) &D_0600BA8C, &sp4C);
+    this->unk_14C = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->actor, sp4C);
+    this->actor.update = &func_80A87F44;
+    this->actor.draw = NULL;
+    Actor_SetScale(&this->actor, 0.087f);
+}
+```
+
+</details>
 
 In the next sections, we shall sort out the various initialisation functions that occur in Init. There are several types, and one of the reasons we are using EnJj as the example is that it has several of the most common ones. A disadvantage of this actor is that it has an unusually complicated Init: we can see that it does three different things depending on the value of its params.
 
@@ -154,9 +226,9 @@ Actor_ProcessInitChain(&this->actor, &D_80A88CE0);
 
 which initialises common properties of actor using an InitChain, which is usually somewhere near the top of the data, in this case in the variable `D_80A88CE0`. Although we don't need to do this now since we we will extern the data, we might as well work out what it is now. Fortunately, we have a script to do this.
 
-The InitChain script is also in the tools folder, and is called `ichaindis.py`. Simply passing it the ROM address will spit out the entire contents of the InitChain, in this case:
+The InitChain script is also in the tools directory, and is called `ichaindis.py`. Simply passing it the ROM address will spit out the entire contents of the InitChain, in this case:
 
-```sh
+```
 $ ./tools/ichaindis.py baserom.z64 80A88CE0
 static InitChainEntry sInitChain[] = {
     ICHAIN_VEC3F_DIV1000(unk_50, 87, ICHAIN_CONTINUE),
@@ -167,7 +239,7 @@ static InitChainEntry sInitChain[] = {
 ```
 
 However, some of these variables have now been given names in the Actor struct. Pass it `--names` to fill these in automatically:
-```sh
+```
 $ ./tools/ichaindis.py --names baserom.z64 80A88CE0
 static InitChainEntry sInitChain[] = {
     ICHAIN_VEC3F_DIV1000(scale, 87, ICHAIN_CONTINUE),
@@ -194,7 +266,7 @@ extern InitChainEntry D_80A88CE0[];
 // };
 ```
 
- (We will come back and actually import it after doing the rest of the actor.)
+(We will come back and actually import it after doing the rest of the actor.)
 
 Since this is an array, we do not need the `&` in the function any more, which leaves us with
 ```C
@@ -208,7 +280,7 @@ in `EnJj_Init`.
 Glancing through the rest of `EnJj_Init`, we notice some references to DynaPoly, for example
 ```C
 DynaPolyActor_Init((DynaPolyActor *) this, 0);
-CollisionHeader_GetVirtual((void *) &D_06000A1C, (void *) &sp4C);
+CollisionHeader_GetVirtual((void *) &D_06000A1C, &sp4C);
 this->unk_14C = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->actor, sp4C);
 ```
 
@@ -245,7 +317,7 @@ typedef struct EnJj {
 Now that we know this, it is worth remaking the context file and running mips2c again, since we have changed the struct significantly. Doing so, and replacing `(Actor*) this` with `&this->dyna.actor` this time, we find that the block we quoted above has become
 ```C
 DynaPolyActor_Init((DynaPolyActor *) this, 0);
-CollisionHeader_GetVirtual((void *) &D_06000A1C, (void *) &sp4C);
+CollisionHeader_GetVirtual((void *) &D_06000A1C, &sp4C);
 this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
 ```
 
@@ -283,8 +355,8 @@ Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &D_80A88CB4)
 
 (You may prefer to just comment out temps initially, to keep track of where they were.)
 
-The last thing we need to deal with is the last variable of `Collider_SetCylinder`, which is again data. Also again we have a script to translate the raw data. This one is called `colliderinit.py`, and lives in `tools/overlayhelpers`. It takes the VRAM address of the data and the type of collider (for more info pass it `-h`). We find
-```sh
+The last thing we need to deal with is the last variable of `Collider_SetCylinder`, which is again data. Also again we have a script to translate the raw data. This one is called `colliderinit.py`, and lives in `tools/overlayhelpers`. It takes the VRAM address of the data and the type of collider (for more info on use, pass it `-h`). We find
+```
 $ ./tools/overlayhelpers/colliderinit.py 80A88CB4 ColliderCylinderInit
 ovl_En_Jj: Rom 00E3E3D0:00E3F9E0 VRam 80A87800:80A88E10 Offset 0014B4
 
@@ -366,7 +438,7 @@ This function also gives us information about other things in the struct. One ob
 ```C
 this->unk300 = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, (u16)0x5A, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, (?32) this->dyna.actor.posRot.rot.y, 0, 0);
 ```
-Hovering over this function tells us it outputs a pointer to the spawned actor, so `this->unk_300` is an `Actor*`. We may or may not care what this actor actually is, depending on how it is used later on, so let's just add `/* 0x0300 */ Actor * childActor` to the struct for now.
+Hovering over this function tells us it outputs a pointer to the spawned actor, so `this->unk_300` is an `Actor*`. We may or may not care what this actor actually is, depending on how it is used later on, so let's just add `/* 0x0300 */ Actor* childActor` to the struct for now.
 
 We can look up what the actor with ID 0x5A is in `z64actor.h`: we find it is `ACTOR_EN_JJ`. So some Jabus spawn another Jabu. Filling this in and removing the spurious cast, we have
 ```C
@@ -412,7 +484,7 @@ We can remove a few more temps that don't look real, and end up with
 void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     EnJj* this = THIS;
 
-    s32 sp4C;
+    CollisionHeader *sp4C;
     // DynaCollisionContext *sp44;
     // DynaCollisionContext *temp_a1_2;
     // DynaCollisionContext *temp_a1_3;
@@ -420,7 +492,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     s16 temp_v0;
     // u32 temp_v0_2;
 
-    sp4C = 0;
+    sp4C = NULL;
     Actor_ProcessInitChain(&this->dyna.actor, D_80A88CE0);
     ActorShape_Init(&this->dyna.actor.shape, 0.0f, NULL, 0.0f);
     temp_v0 = this->dyna.actor.params;
@@ -503,7 +575,7 @@ This is simple enough to read that we don't even need to appeal to mips2c: it sa
 ```C
 typedef void (*EnJjActionFunc)(struct EnJj*, GlobalContext*);
 ```
-This also gives us another bit of the struct, conveniently plugging the gap at `0x2FC`:
+Put this between `struct EnJj;` and the actor struct in the header file. This also gives us another bit of the struct, conveniently plugging the gap at `0x2FC`:
 ```C
 /* 0x02FC */ EnJjActionFunc actionFunc;
 ```
@@ -515,7 +587,7 @@ void func_80A87800(EnJj* this, EnJjActionFunc actionFunc) {
 }
 ```
 
-and `func_80A87BEC` and `func_80A87C30` are action functions. Since they are first used above where they are defined, we prototype them at the top as well,
+and that `func_80A87BEC` and `func_80A87C30`, passed to it in `EnJj_Init`, are action functions. Since they are first used above where they are defined, we prototype them at the top as well,
 ```C
 void EnJj_Init(Actor* thisx, GlobalContext* globalCtx);
 void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx);
@@ -607,7 +679,7 @@ void func_80A87800(EnJj* this, EnJjActionFunc actionFunc) {
 void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     EnJj* this = THIS;
 
-    s32 sp4C;
+    CollisionHeader *sp4C;
     // DynaCollisionContext *sp44;
     // DynaCollisionContext *temp_a1_2;
     // DynaCollisionContext *temp_a1_3;
@@ -615,7 +687,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     s16 temp_v0;
     // u32 temp_v0_2;
 
-    sp4C = 0;
+    sp4C = NULL;
     Actor_ProcessInitChain(&this->dyna.actor, D_80A88CE0);
     ActorShape_Init(&this->dyna.actor.shape, 0.0f, NULL, 0.0f);
     temp_v0 = this->dyna.actor.params;
@@ -674,17 +746,17 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
 
 Once preliminary cleanup and struct filling is done, most time spent matching functions is done by comparing the original code with the code you have compiled. This is aided by a program called `diff.py`.
 
-In order to use `diff.py` with the symbol names, we need a copy of the code to compare against. This is done by copying the `build` folder into a folder called `expected`. Copying in Windows on WSL is very slow, so run
-```sh
+In order to use `diff.py` with the symbol names, we need a copy of the code to compare against. This is done by copying the `build` directory into a directory called `expected`. Copying in Windows on WSL is very slow, so run
+```
 $ mkdir expected
 cp -r build/ expected/
 ```
-from the main directory of the repository. You should end up with the folder structure `expected/build/...`.
+from the main directory of the repository. You should end up with the directory structure `expected/build/...`.
 
 You may want to do this again when you start renaming functions. *Make sure that you copy an OK build, or you are going to get very confused.* You should also do this again after needing to do a `make clean`.
 
 Now, we run diff on the function name: in the main directory,
-```sh
+```
 $ ./diff.py -mwo3 EnJj_Init
 ```
 
@@ -818,7 +890,7 @@ It turns out that this is enough to completely fix the diff:
 (last two edits, only top shown for brevity)
 
 Everything *looks* fine, but we only know for sure when we run `make`. Thankfully doing so gives
-```sh
+```
 zelda_ocarina_mq_dbg.z64: OK
 ```
 
