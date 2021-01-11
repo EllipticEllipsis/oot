@@ -99,7 +99,7 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
                 this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
             DynaPolyActor_Init(&this->dyna, 0);
             CollisionHeader_GetVirtual(&D_06000A1C, &sp4C);
-            this->dyna.dynaPolyId =
+            this->dyna.bgId =
                 DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
             Collider_InitCylinder(globalCtx, &this->collider);
             Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &sCylinderInit);
@@ -108,9 +108,9 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
         case 0:
             DynaPolyActor_Init(&this->dyna, 0);
             CollisionHeader_GetVirtual(&D_06001830, &sp4C);
-            this->dyna.dynaPolyId =
+            this->dyna.bgId =
                 DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
-            func_8003ECA8(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            func_8003ECA8(globalCtx, &globalCtx->colCtx.dyna, this->dyna.bgId);
             this->dyna.actor.update = func_80A87F44;
             this->dyna.actor.draw = NULL;
             Actor_SetScale(&this->dyna.actor, 0.087f);
@@ -118,7 +118,7 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
         case 1:
             DynaPolyActor_Init(&this->dyna, 0);
             CollisionHeader_GetVirtual(&D_0600BA8C, &sp4C);
-            this->dyna.dynaPolyId =
+            this->dyna.bgId =
                 DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
             this->dyna.actor.update = func_80A87F44;
             this->dyna.actor.draw = NULL;
@@ -133,12 +133,12 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
 
     switch (this->dyna.actor.params) {
         case -1:
-            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.bgId);
             Collider_DestroyCylinder(globalCtx, &this->collider);
             break;
         case 0:
         case 1:
-            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.bgId);
             break;
     }
 }
@@ -170,7 +170,7 @@ void func_80A87B9C(EnJj* this, GlobalContext* globalCtx) {
     if (this->unk_308 >= -5200) {
         this->unk_308 -= 102;
         if (this->unk_308 < -2600) {
-            func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->dynaPolyId);
+            func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->bgId);
         }
     }
 }
@@ -206,7 +206,7 @@ void func_80A87CEC(EnJj* this, GlobalContext* globalCtx) {
         func_80A87800(this, func_80A87EF0);
         globalCtx->csCtx.segment = &D_80A88164;
         gSaveContext.cutsceneTrigger = 1;
-        func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->dynaPolyId);
+        func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->bgId);
         func_8005B1A4(ACTIVE_CAM);
         gSaveContext.eventChkInf[3] |= 0x400;
         func_80078884(NA_SE_SY_CORRECT_CHIME);

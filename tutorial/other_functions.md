@@ -38,14 +38,14 @@ void EnJj_Destroy(EnJj *this, GlobalContext *globalCtx) {
     temp_a3 = globalCtx;
     if (temp_v0 == -1) {
         globalCtx = temp_a3;
-        DynaPoly_DeleteBgActor(temp_a3, &temp_a3->colCtx.dyna, (s32) this->dyna.dynaPolyId);
+        DynaPoly_DeleteBgActor(temp_a3, &temp_a3->colCtx.dyna, (s32) this->dyna.bgId);
         Collider_DestroyCylinder(globalCtx, &this->collider);
         return;
     }
     if ((temp_v0 != 0) && (temp_v0 != 1)) {
         return;
     }
-    DynaPoly_DeleteBgActor(temp_a3, &temp_a3->colCtx.dyna, (s32) this->dyna.dynaPolyId);
+    DynaPoly_DeleteBgActor(temp_a3, &temp_a3->colCtx.dyna, (s32) this->dyna.bgId);
 }
 ```
 
@@ -58,12 +58,12 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
 
     switch (this->dyna.actor.params) {
         case -1:
-            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.bgId);
             Collider_DestroyCylinder(globalCtx, &this->collider);
             break;
         case 0:
         case 1:
-            DynaPoly_DeleteBgActor(temp_a3, &temp_a3->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(temp_a3, &temp_a3->colCtx.dyna, this->dyna.bgId);
             break;
     }
 }
@@ -75,12 +75,12 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
 
     switch (this->dyna.actor.params) {
         case -1:
-            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.bgId);
             Collider_DestroyCylinder(globalCtx, &this->collider);
             break;
         case 0:
         case 1:
-            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.bgId);
             break;
     }
 }
@@ -156,7 +156,7 @@ typedef struct EnJj {
 
 We can eliminate the temp since it's use in a simple way one after the other. `this->unk308 = (s16) (this->unk308 - 0x66);` can be written as `this->unk308 -= 0x66;`.
 
-In the `func_8003EBF8` we see that we should have at least made `this->childActor` a `DynaPolyActor*`, so that the last argument is its `DynaPolyId`. To avoid compiler warnings, we also need to cast the `Actor_SpawnAsChild` as such in Init,
+In the `func_8003EBF8` we see that we should have at least made `this->childActor` a `DynaPolyActor*`, so that the last argument is its `bgId`. To avoid compiler warnings, we also need to cast the `Actor_SpawnAsChild` as such in Init,
 ```C
 this->childActor = (DynaPolyActor*)Actor_SpawnAsChild(...)
 ```
@@ -167,7 +167,7 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx) {
     if (this->unk_308 >= -0x1450) {
         this->unk_308 -= 0x66;
         if (this->unk_308 < -0xA28) {
-            func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, this->childActor->dynaPolyId);
+            func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, this->childActor->bgId);
         }
     }
 }
@@ -214,8 +214,8 @@ The first suggestion looks plausible:
      this->unk_308 -= 0x66;
      if (this->unk_308 < (-0xA28))
      {
--      func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, this->childActor->dynaPolyId);
-+      func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, new_var->dynaPolyId);
+-      func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, this->childActor->bgId);
++      func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, new_var->bgId);
      }
  
    }
@@ -229,7 +229,7 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx) {
     if (this->unk_308 >= -0x1450) {
         this->unk_308 -= 0x66;
         if (this->unk_308 < -0xA28) {
-            func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->dynaPolyId);
+            func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->bgId);
         }
     }
 }
@@ -247,7 +247,7 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx) {
     if (this->unk_308 >= -5200) {
         this->unk_308 -= 102;
         if (this->unk_308 < -2600) {
-            func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->dynaPolyId);
+            func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->bgId);
         }
     }
 }
@@ -377,7 +377,7 @@ void func_80A87CEC(EnJj *this, GlobalContext *globalCtx) {
     func_80A87800(this, &func_80A87EF0);
     globalCtx->csCtx.segment = &D_80A88164;
     gSaveContext.cutsceneTrigger = (u8)1U;
-    func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, (s32) temp_v1->dynaPolyId);
+    func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, (s32) temp_v1->bgId);
     func_8005B1A4(globalCtx->cameraPtrs[globalCtx->activeCamera]);
     gSaveContext.unkEDA = (u16) (gSaveContext.unkEDA | 0x400);
     func_80078884((u16)0x4802U);
@@ -415,7 +415,7 @@ void func_80A87CEC(EnJj *this, GlobalContext *globalCtx) {
     func_80A87800(this, func_80A87EF0);
     globalCtx->csCtx.segment = &D_80A88164;
     gSaveContext.cutsceneTrigger = 1;
-    func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->dynaPolyId);
+    func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->bgId);
     func_8005B1A4(ACTIVE_CAM);
     gSaveContext.eventChkInf[3] |= 0x400;
     func_80078884(NA_SE_SY_CORRECT_CHIME);
@@ -434,7 +434,7 @@ void func_80A87CEC(EnJj* this, GlobalContext* globalCtx) {
         func_80A87800(this, func_80A87EF0);
         globalCtx->csCtx.segment = &D_80A88164;
         gSaveContext.cutsceneTrigger = 1;
-        func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->dynaPolyId);
+        func_8003EBF8(globalCtx, &globalCtx->colCtx.dyna, child->bgId);
         func_8005B1A4(ACTIVE_CAM);
         gSaveContext.eventChkInf[3] |= 0x400;
         func_80078884(NA_SE_SY_CORRECT_CHIME);

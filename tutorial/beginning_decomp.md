@@ -218,7 +218,7 @@ Since there's basically nothing in the struct at present, the change is easy to 
 ```C
 typedef struct {
     /* 0x000 */ Actor actor;
-    /* 0x14C */ u32 dynaPolyId;
+    /* 0x14C */ u32 bgId;
     /* 0x150 */ f32 unk_150;
     /* 0x154 */ f32 unk_154;
     /* 0x158 */ s16 unk_158;
@@ -246,7 +246,7 @@ Now that we know this, it is worth remaking the context file and running mips2c 
 ```C
 DynaPolyActor_Init((DynaPolyActor *) this, 0);
 CollisionHeader_GetVirtual((void *) &D_06000A1C, (void *) &sp4C);
-this->dyna.dynaPolyId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
 ```
 
 Next, replace `(DynaPolyActor *) this` by `&this->dyna`. There's not a lot more we can do to the DynaPoly stuff right now, so just remove the casts to void and move on.
@@ -442,7 +442,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
         this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
         DynaPolyActor_Init(&this->dyna, 0);
         CollisionHeader_GetVirtual(&D_06000A1C, &sp4C);
-        this->dyna.dynaPolyId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+        this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
         // temp_a1_3 = this + 0x2B0;
         // sp44 = temp_a1_3;
         Collider_InitCylinder(globalCtx, &this->collider);
@@ -455,8 +455,8 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
         CollisionHeader_GetVirtual(&D_06001830, &sp4C);
         // temp_a1_2 = &globalCtx->colCtx.dyna;
         // sp44 = temp_a1_2;
-        this->dyna.dynaPolyId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
-        func_8003ECA8(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+        this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+        func_8003ECA8(globalCtx, &globalCtx->colCtx.dyna, this->dyna.bgId);
         this->dyna.actor.update = &func_80A87F44;
         this->dyna.actor.draw = NULL;
         Actor_SetScale(&this->dyna.actor, 0.087f);
@@ -467,7 +467,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     }
     DynaPolyActor_Init(&this->dyna, 0);
     CollisionHeader_GetVirtual(&D_0600BA8C, &sp4C);
-    this->dyna.dynaPolyId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+    this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
     this->dyna.actor.update = &func_80A87F44;
     this->dyna.actor.draw = NULL;
     Actor_SetScale(&this->dyna.actor, 0.087f);
@@ -637,7 +637,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
         this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
         DynaPolyActor_Init(&this->dyna, 0);
         CollisionHeader_GetVirtual(&D_06000A1C, &sp4C);
-        this->dyna.dynaPolyId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+        this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
         // temp_a1_3 = this + 0x2B0;
         // sp44 = temp_a1_3;
         Collider_InitCylinder(globalCtx, &this->collider);
@@ -650,8 +650,8 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
         CollisionHeader_GetVirtual(&D_06001830, &sp4C);
         // temp_a1_2 = &globalCtx->colCtx.dyna;
         // sp44 = temp_a1_2;
-        this->dyna.dynaPolyId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
-        func_8003ECA8(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+        this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+        func_8003ECA8(globalCtx, &globalCtx->colCtx.dyna, this->dyna.bgId);
         this->dyna.actor.update = func_80A87F44;
         this->dyna.actor.draw = NULL;
         Actor_SetScale(&this->dyna.actor, 0.087f);
@@ -662,7 +662,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
     }
     DynaPolyActor_Init(&this->dyna, 0);
     CollisionHeader_GetVirtual(&D_0600BA8C, &sp4C);
-    this->dyna.dynaPolyId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+    this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
     this->dyna.actor.update = func_80A87F44;
     this->dyna.actor.draw = NULL;
     Actor_SetScale(&this->dyna.actor, 0.087f);
@@ -763,7 +763,7 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx) {
                 this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
             DynaPolyActor_Init(&this->dyna, 0);
             CollisionHeader_GetVirtual(&D_06000A1C, &sp4C);
-            this->dyna.dynaPolyId =
+            this->dyna.bgId =
                 DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
             Collider_InitCylinder(globalCtx, &this->collider);
             Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &D_80A88CB4);
@@ -774,9 +774,9 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx) {
             CollisionHeader_GetVirtual(&D_06001830, &sp4C);
             // temp_a1_2 = &globalCtx->colCtx.dyna;
             // sp44 = temp_a1_2;
-            this->dyna.dynaPolyId =
+            this->dyna.bgId =
                 DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
-            func_8003ECA8(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            func_8003ECA8(globalCtx, &globalCtx->colCtx.dyna, this->dyna.bgId);
             this->dyna.actor.update = func_80A87F44;
             this->dyna.actor.draw = NULL;
             Actor_SetScale(&this->dyna.actor, 0.087f);
@@ -784,7 +784,7 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx) {
         case 1:
             DynaPolyActor_Init(&this->dyna, 0);
             CollisionHeader_GetVirtual(&D_0600BA8C, &sp4C);
-            this->dyna.dynaPolyId =
+            this->dyna.bgId =
                 DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
             this->dyna.actor.update = func_80A87F44;
             this->dyna.actor.draw = NULL;
