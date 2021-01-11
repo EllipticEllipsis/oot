@@ -97,29 +97,29 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
             this->childActor = (DynaPolyActor*)Actor_SpawnAsChild(
                 &globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f,
                 this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
-            DynaPolyInfo_SetActorMove(&this->dyna, 0);
-            DynaPolyInfo_Alloc(&D_06000A1C, &sp4C);
+            DynaPolyActor_Init(&this->dyna, 0);
+            CollisionHeader_GetVirtual(&D_06000A1C, &sp4C);
             this->dyna.dynaPolyId =
-                DynaPolyInfo_RegisterActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+                DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
             Collider_InitCylinder(globalCtx, &this->collider);
             Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &sCylinderInit);
             this->dyna.actor.colChkInfo.mass = 0xFF;
             break;
         case 0:
-            DynaPolyInfo_SetActorMove(&this->dyna, 0);
-            DynaPolyInfo_Alloc(&D_06001830, &sp4C);
+            DynaPolyActor_Init(&this->dyna, 0);
+            CollisionHeader_GetVirtual(&D_06001830, &sp4C);
             this->dyna.dynaPolyId =
-                DynaPolyInfo_RegisterActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+                DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
             func_8003ECA8(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
             this->dyna.actor.update = func_80A87F44;
             this->dyna.actor.draw = NULL;
             Actor_SetScale(&this->dyna.actor, 0.087f);
             break;
         case 1:
-            DynaPolyInfo_SetActorMove(&this->dyna, 0);
-            DynaPolyInfo_Alloc(&D_0600BA8C, &sp4C);
+            DynaPolyActor_Init(&this->dyna, 0);
+            CollisionHeader_GetVirtual(&D_0600BA8C, &sp4C);
             this->dyna.dynaPolyId =
-                DynaPolyInfo_RegisterActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
+                DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
             this->dyna.actor.update = func_80A87F44;
             this->dyna.actor.draw = NULL;
             Actor_SetScale(&this->dyna.actor, 0.087f);
@@ -133,12 +133,12 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
 
     switch (this->dyna.actor.params) {
         case -1:
-            DynaPolyInfo_Free(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
             Collider_DestroyCylinder(globalCtx, &this->collider);
             break;
         case 0:
         case 1:
-            DynaPolyInfo_Free(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
             break;
     }
 }

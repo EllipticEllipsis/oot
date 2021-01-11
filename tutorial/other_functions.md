@@ -38,14 +38,14 @@ void EnJj_Destroy(EnJj *this, GlobalContext *globalCtx) {
     temp_a3 = globalCtx;
     if (temp_v0 == -1) {
         globalCtx = temp_a3;
-        DynaPolyInfo_Free(temp_a3, &temp_a3->colCtx.dyna, (s32) this->dyna.dynaPolyId);
+        DynaPoly_DeleteBgActor(temp_a3, &temp_a3->colCtx.dyna, (s32) this->dyna.dynaPolyId);
         Collider_DestroyCylinder(globalCtx, &this->collider);
         return;
     }
     if ((temp_v0 != 0) && (temp_v0 != 1)) {
         return;
     }
-    DynaPolyInfo_Free(temp_a3, &temp_a3->colCtx.dyna, (s32) this->dyna.dynaPolyId);
+    DynaPoly_DeleteBgActor(temp_a3, &temp_a3->colCtx.dyna, (s32) this->dyna.dynaPolyId);
 }
 ```
 
@@ -58,12 +58,12 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
 
     switch (this->dyna.actor.params) {
         case -1:
-            DynaPolyInfo_Free(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
             Collider_DestroyCylinder(globalCtx, &this->collider);
             break;
         case 0:
         case 1:
-            DynaPolyInfo_Free(temp_a3, &temp_a3->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(temp_a3, &temp_a3->colCtx.dyna, this->dyna.dynaPolyId);
             break;
     }
 }
@@ -75,12 +75,12 @@ void EnJj_Destroy(Actor* thisx, GlobalContext* globalCtx) {
 
     switch (this->dyna.actor.params) {
         case -1:
-            DynaPolyInfo_Free(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
             Collider_DestroyCylinder(globalCtx, &this->collider);
             break;
         case 0:
         case 1:
-            DynaPolyInfo_Free(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
+            DynaPoly_DeleteBgActor(globalCtx, &globalCtx->colCtx.dyna, this->dyna.dynaPolyId);
             break;
     }
 }
