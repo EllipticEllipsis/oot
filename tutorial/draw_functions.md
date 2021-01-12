@@ -164,10 +164,312 @@ Lastly, the penultimate and antepenultimate arguments of `SkelAnime_DrawFlexOpa`
 
 ## More examples: OverrideLimbDraw and PostLimbDraw
 
+For more examples of graphics macros and the structure of Draw functions, we look at a function from `EnDntNormal`, which is some Deku Scrubs used in the minigame stuff in Lost Woods. This has a good selection of macros, and two functions that are commonly combined with Draw, namely OverrideLimbDraw and PostLimbDraw.
+
+The mips2c output for 
+
+```C
+void func_809F5A6C(Actor *thisx, GlobalContext *globalCtx) {
+    ? sp60;
+    Gfx *sp48;
+    Gfx *sp38;
+    Actor *sp14;
+    Gfx *temp_v0;
+    Gfx *temp_v0_2;
+    Gfx *temp_v0_3;
+    Gfx *temp_v0_4;
+    Gfx *temp_v0_5;
+    GraphicsContext *temp_a1;
+    GraphicsContext *temp_s0;
+    s32 temp_a0;
+    void *temp_v1;
+
+    sp60.unk0 = (s32) D_809F5E94.unk0;
+    sp60.unk4 = (s32) D_809F5E94.unk4;
+    sp60.unk8 = (s32) D_809F5E94.unk8;
+    temp_a1 = globalCtx->state.gfxCtx;
+    temp_s0 = temp_a1;
+    Graph_OpenDisps(&sp48, temp_a1, (const char *) "../z_en_dnt_nomal.c", 0x6FE);
+    func_80093D18(globalCtx->state.gfxCtx);
+    temp_v0 = temp_s0->polyOpa.p;
+    temp_s0->polyOpa.p = temp_v0 + 8;
+    temp_v0->words.w0 = 0xDB060020;
+    temp_a0 = *(&D_809F5EA0 + (thisx->unk268 * 4));
+    temp_v0->words.w1 = (temp_a0 & 0xFFFFFF) + gSegments[(u32) (temp_a0 * 0x10) >> 0x1C] + 0x80000000;
+    sp14 = thisx;
+    SkelAnime_DrawOpa(globalCtx, thisx->unk150, thisx->unk16C, &func_809F58E4, &func_809F59E4);
+    Matrix_Translate(thisx->unk21C, thisx->unk220, (bitwise f32) thisx->unk224, (u8)0U);
+    Matrix_Scale(0.01f, 0.01f, 0.01f, (u8)1U);
+    temp_v0_2 = temp_s0->polyOpa.p;
+    temp_s0->polyOpa.p = temp_v0_2 + 8;
+    temp_v0_2->words.w0 = 0xE7000000;
+    temp_v0_2->words.w1 = 0;
+    temp_v0_3 = temp_s0->polyOpa.p;
+    temp_s0->polyOpa.p = temp_v0_3 + 8;
+    temp_v0_3->words.w0 = 0xFB000000;
+    temp_v1 = (thisx->unk26A * 4) + &D_809F5E4C;
+    temp_v0_3->words.w1 = (temp_v1->unk-2 << 8) | (temp_v1->unk-4 << 0x18) | (temp_v1->unk-3 << 0x10) | 0xFF;
+    temp_v0_4 = temp_s0->polyOpa.p;
+    temp_s0->polyOpa.p = temp_v0_4 + 8;
+    temp_v0_4->words.w0 = 0xDA380003;
+    sp38 = temp_v0_4;
+    sp38->words.w1 = Matrix_NewMtx(globalCtx->state.gfxCtx, (char *) "../z_en_dnt_nomal.c", 0x716);
+    temp_v0_5 = temp_s0->polyOpa.p;
+    temp_s0->polyOpa.p = temp_v0_5 + 8;
+    temp_v0_5->words.w1 = (u32) &D_06001B00;
+    temp_v0_5->words.w0 = 0xDE000000;
+    Graph_CloseDisps(&sp48, globalCtx->state.gfxCtx, (const char *) "../z_en_dnt_nomal.c", 0x719);
+    if (&func_809F49A4 == thisx->unk214) {
+        func_80033C30((Vec3f *) &thisx->posRot, (Vec3f *) &sp60, (u8)0xFFU, globalCtx);
+    }
+}
+```
+
+### Graphics macros
+
+There are 5 graphics macro blocks here:
+```C
+temp_v0 = temp_s0->polyOpa.p;
+temp_s0->polyOpa.p = temp_v0 + 8;
+temp_v0->words.w0 = 0xDB060020;
+temp_a0 = *(&D_809F5EA0 + (thisx->unk268 * 4));
+temp_v0->words.w1 = (temp_a0 & 0xFFFFFF) + gSegments[(u32) (temp_a0 * 0x10) >> 0x1C] + 0x80000000;
+```
+
+We've seen one of these before: gfxdis gives
+```C
+$ gfxdis.f3dex2 -g "POLY_OPA_DISP++" -d DB06002012345678
+gSPSegment(POLY_OPA_DISP++, 0x08, 0x12345678);
+```
+and looking at the data shows
+```
+glabel D_809F5EA0
+ .word 0x060027D0, 0x060025D0, 0x06002750, 0x00000000
+```
+which is an array of pointers to something again. It is used inside a `SEGMENTED_TO_VIRTUAL`, so they are most likely textures, and this block becomes
+```C
+gSPSegment(POLY_OPA_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(D_809F5EA0[this->unk_268]));
+```
+
+Next,
+```C
+temp_v0_2 = temp_s0->polyOpa.p;
+temp_s0->polyOpa.p = temp_v0_2 + 8;
+temp_v0_2->words.w0 = 0xE7000000;
+temp_v0_2->words.w1 = 0;
+```
+which we can find immediately using
+```
+$ gfxdis.f3dex2 -g "POLY_OPA_DISP++" -d E700000000000000
+gDPPipeSync(POLY_OPA_DISP++);
+```
+
+Third,
+```C
+temp_v0_3 = temp_s0->polyOpa.p;
+temp_s0->polyOpa.p = temp_v0_3 + 8;
+temp_v0_3->words.w0 = 0xFB000000;
+temp_v1 = (thisx->unk26A * 4) + &D_809F5E4C;
+temp_v0_3->words.w1 = (temp_v1->unk-2 << 8) | (temp_v1->unk-4 << 0x18) | (temp_v1->unk-3 << 0x10) | 0xFF;
+```
+this looks more troublesome. We find
+```
+$ gfxdis.f3dex2 -g "POLY_OPA_DISP++" -d FB00000012345678
+gDPSetEnvColor(POLY_OPA_DISP++, 0x12, 0x34, 0x56, 0x78);
+```
+
+Now we need to work out what the last four arguments are. Two things are going on here: `D_809F5E4C` is an array of something:
+```
+glabel D_809F5E4C
+ .word 0xFFFFFFFF, 0xFFC3AFFF, 0xD2FF00FF, 0xFFFFFFFF, 0xD2FF00FF, 0xFFC3AFFF, 0xFFFFFFFF, 0xFFC3AFFF, 0xD2FF00FF
+```
+Worse, this is being accessed with pointer subtraction in the second word. `temp_v1 = (thisx->unk26A * 4) + &D_809F5E4C;` tells us that the array has elements of size 4 bytes, and the graphics macro implies the elements are colors. Colors of size 4 bytes are `Color_RGBA8`. Usually, we write colors in decimal, so `D_809F5E4C` becomes
+```C
+static Color_RGBA8 D_809F5E4C[] = {
+    { 255, 255, 255, 255 }, { 255, 195, 175, 255 }, { 210, 255, 0, 255 },
+    { 255, 255, 255, 255 }, { 210, 255, 0, 255 },   { 255, 195, 175, 255 },
+    { 255, 255, 255, 255 }, { 255, 195, 175, 255 }, { 210, 255, 0, 255 },
+};```
+
+Now, we have two things to worry about: how to implement the negative pointer access, and how the second word is built. Negative accesses can be done by just subtracting 1, so that
+```C
+temp_v1 = D_809F5E4C[this->unk_26A - 1];
+```
+and then
+```C
+temp_v0_3->words.w1 = (temp_v1->unk2 << 8) | (temp_v1->unk0 << 0x18) | (temp_v1->unk3 << 0x10) | 0xFF;
+```
+or rather, since it is a `Color_RGB8`,
+```C
+temp_v0_3->words.w1 = (temp_v1.b << 8) | (temp_v1.r << 0x18) | (temp_v1.g << 0x10) | 0xFF;
+```
+
+The last thing to worry about is how to put this word into the macro. Let's think aboout what the word actually is in a concrete case; it is easiest to see what is going on in hex, so suppose we are in the case
+```C
+temp_v1 = { 0xFF, 0xC3, 0xAF, 0xFF };
+```
+
+Then the calculation is
+```
+(0xAF << 8) | (0xFF << 0x18) | (0xC3 << 0x10) | 0xFF = 0xAF00 | 0xC30000 | 0xFF0000000 | 0xFF = 0xFFC3AFFF
+```
+and so all this calculation is doing is turning `temp_v1` back into a word, with the last byte replaced by `0xFF` (that all the elements of `D_809F5E4C` have `0xFF` as their last element anyway is irrelevant here). Looking back at the output of gfxdis, we see that this actually means that the r,g,b just slot into the penultimate three arguments, the last being `0xFF`, leaving
+```C
+temp_v1 = D_809F5E4C[this->unk_26A - 1];
+gDPSetEnvColor(POLY_OPA_DISP++, temp_v1.r, temp_v1.g, temp_v1.r, 0xFF);
+```
+as the residue of this block; it may turn out later that we can eliminate the temp.
 
 
+The last two are much easier:
+```C
+temp_v0_4 = temp_s0->polyOpa.p;
+temp_s0->polyOpa.p = temp_v0_4 + 8;
+temp_v0_4->words.w0 = 0xDA380003;
+sp38 = temp_v0_4;
+sp38->words.w1 = Matrix_NewMtx(globalCtx->state.gfxCtx, (char *) "../z_en_dnt_nomal.c", 0x716);
+```
+The macro is
+```
+$ gfxdis.f3dex2 -g "POLY_OPA_DISP++" -d DA38000312345678
+gSPMatrix(POLY_OPA_DISP++, 0x12345678, G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+```
+and the second argument is filled by the `Matrix_NewMtx` function:
+```C
+gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(globalCtx->state.gfxCtx, "../z_en_dnt_nomal.c", 1814), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+```
 
+Lastly,
+```C
+temp_v0_5 = temp_s0->polyOpa.p;
+temp_s0->polyOpa.p = temp_v0_5 + 8;
+temp_v0_5->words.w1 = (u32) &D_06001B00;
+temp_v0_5->words.w0 = 0xDE000000;
+```
+The macro is
+```
+$ gfxdis.f3dex2 -g "POLY_OPA_DISP++" -d DE00000012345678
+gSPDisplayList(POLY_OPA_DISP++, 0x12345678);
+```
+and so `D_06001B00` is a displaylist, so the type in the externed data at the top of the file can be changed to `Gfx D_06001B00[]`. Arrays act like pointers, so we don't need the `&` in the macro:
+```C
+gSPDisplayList(POLY_OPA_DISP++, D_06001B00);
+```
 
+Putting this all together
+```C
+void func_809F5A6C(Actor *thisx, GlobalContext *globalCtx) {
+    EnDntNormal *this = THIS;
+    ? sp60;
+    Actor *sp14;
+    Color_RGBA8 temp_v1;
 
+    sp60.unk0 = (s32) D_809F5E94.unk0;
+    sp60.unk4 = (s32) D_809F5E94.unk4;
+    sp60.unk8 = (s32) D_809F5E94.unk8;
 
+    OPEN_DISPS(globalCtx->state.gfxCtx, "../z_en_dnt_nomal.c", 1790);
+    func_80093D18(globalCtx->state.gfxCtx);
 
+    gSPSegment(POLY_OPA_DISP++, 0x08, SEGMENTED_TO_VIRTUAL(D_809F5EA0[this->unk_268]));
+
+    sp14 = this;
+    SkelAnime_DrawOpa(globalCtx, thisx->unk150, thisx->unk16C, &func_809F58E4, &func_809F59E4);
+    Matrix_Translate(thisx->unk21C, thisx->unk220, (bitwise f32) thisx->unk224, (u8)0U);
+    Matrix_Scale(0.01f, 0.01f, 0.01f, (u8)1U);
+
+    gDPPipeSync(POLY_OPA_DISP++);
+    temp_v1 = D_809F5E4C[this->unk_26A - 1];
+    gDPSetEnvColor(POLY_OPA_DISP++, temp_v1.r, temp_v1.g, temp_v1.r, 0xFF);
+    gSPMatrix(POLY_OPA_DISP++, Matrix_NewMtx(globalCtx->state.gfxCtx, "../z_en_dnt_nomal.c", 1814), G_MTX_NOPUSH | G_MTX_LOAD | G_MTX_MODELVIEW);
+    gSPDisplayList(POLY_OPA_DISP++, D_06001B00);
+
+    CLOSE_DISPS(globalCtx->state.gfxCtx, "../z_en_dnt_nomal.c", 1817);
+
+    if (&func_809F49A4 == this->unk214) {
+        func_80033C30((Vec3f *) &this.actor->posRot, (Vec3f *) &sp60, (u8)0xFFU, globalCtx);
+    }
+}
+```
+
+### SkelAnime_Draw and the LimbDraws
+
+Some more general tidying up can be done here (`sp60` and so `D_809F5E94` are `Vec3f`, for example, and under normal circumstances we'd know that ), but the big remaining issue is
+```C
+sp14 = this;
+SkelAnime_DrawOpa(globalCtx, thisx->unk150, thisx->unk16C, func_809F58E4, func_809F59E4);
+```
+If we look at the definition of `SkelAnime_DrawOpa`, we find that it's missing the last argument. This is mips2c not noticing why `this` has been put on the stack: this code should actually be
+```C
+SkelAnime_DrawOpa(globalCtx, thisx->unk150, thisx->unk16C, func_809F58E4, func_809F59E4, this);
+```
+mips2c doing this is not especially unusual, so bear it in mind.
+
+The other thing this tells us is that `func_809F58E4` is of type `OverrideLimbDraw`, and `func_809F59E4` of type `PostLimbDraw`. Their names are fairly self-explanatory. Filling in the prototypes as
+```C
+s32 func_809F58E4(GlobalContext* globalCtx, s32 limbIndex, Gfx** dList, Vec3f* pos, Vec3s* rot, void* thisx);
+void func_809F59E4(GlobalContext* globalCtx, s32 limbIndex, Gfx** dList, Vec3s* rot, void* thisx);
+```
+and running mips2c gives
+
+```C
+s32 func_809F58E4(GlobalContext *globalCtx, s32 limbIndex, Gfx **dList, Vec3f *pos, Vec3s *rot, void *thisx) {
+    GraphicsContext *sp38;
+    Gfx *sp28;
+    Gfx *temp_v1;
+    Gfx *temp_v1_2;
+    GraphicsContext *temp_a1;
+    void *temp_v0;
+
+    if ((limbIndex == 1) || (limbIndex == 3) || (limbIndex == 4) || (limbIndex == 5) || (limbIndex == 6)) {
+        temp_a1 = globalCtx->state.gfxCtx;
+        sp38 = temp_a1;
+        Graph_OpenDisps(&sp28, temp_a1, (const char *) "../z_en_dnt_nomal.c", 0x6C5);
+        temp_v1 = sp38->polyOpa.p;
+        sp38->polyOpa.p = temp_v1 + 8;
+        temp_v1->words.w1 = 0;
+        temp_v1->words.w0 = 0xE7000000;
+        temp_v1_2 = sp38->polyOpa.p;
+        sp38->polyOpa.p = temp_v1_2 + 8;
+        temp_v1_2->words.w0 = 0xFB000000;
+        temp_v0 = (thisx->unk26A * 4) + &D_809F5E4C;
+        temp_v1_2->words.w1 = (temp_v0->unk-2 << 8) | (temp_v0->unk-4 << 0x18) | (temp_v0->unk-3 << 0x10) | 0xFF;
+        Graph_CloseDisps(&sp28, globalCtx->state.gfxCtx, (const char *) "../z_en_dnt_nomal.c", 0x6CF);
+    }
+    return 0;
+}
+
+void func_809F59E4(GlobalContext *globalCtx, s32 limbIndex, Gfx **dList, Vec3s *rot, void *thisx) {
+    ? sp18;
+
+    sp18.unk0 = (s32) D_809F5E88.unk0;
+    sp18.unk4 = (s32) D_809F5E88.unk4;
+    sp18.unk8 = (s32) D_809F5E88.unk8;
+    if (thisx->unk26A == 0) {
+        if (limbIndex == 5) {
+            Matrix_MultVec3f((Vec3f *) &sp18, thisx + 0x27C);
+            return;
+        }
+    } else if (limbIndex == 7) {
+        Matrix_MultVec3f((Vec3f *) &sp18, thisx + 0x27C);
+    }
+}
+```
+
+This structure is pretty typical: both edit what certain limbs do. Both also usually need a `ActorName *this = THIS;` at the top. We have seen both of the macros in the former before: applying the usual procedure, we find that it becomes
+```C
+s32 func_809F58E4(GlobalContext *globalCtx, s32 limbIndex, Gfx **dList, Vec3f *pos, Vec3s *rot, void *thisx) {
+    EnDntNormal *this = THIS;
+
+    if ((limbIndex == 1) || (limbIndex == 3) || (limbIndex == 4) || (limbIndex == 5) || (limbIndex == 6)) {
+        OPEN_DISPS(globalCtx->state.gfxCtx, "../z_en_dnt_nomal.c", 1733);
+        gDPPipeSync(POLY_OPA_DISP++);
+        gDPSetEnvColor(POLY_OPA_DISP++, D_809F5E4C[this->type - 1].r, D_809F5E4C[this->type - 1].g, D_809F5E4C[this->type - 1].b, 255);
+        CLOSE_DISPS(globalCtx->state.gfxCtx, (const char*)"../z_en_dnt_nomal.c", 1743);
+    }
+    return 0;
+}
+```
+Notice that this function returns `0`. OverrideLimbDraw almost always returns `0`.
+
+The latter function is easier, and it is probably unnecessary to explain to the reader what it is necessary to do to it to clean it up.
