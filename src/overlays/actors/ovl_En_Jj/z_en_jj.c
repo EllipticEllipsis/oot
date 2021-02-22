@@ -108,8 +108,8 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx2) {
                 func_80A87800(this, func_80A87C30);
             }
             this->childActor = (DynaPolyActor*)Actor_SpawnAsChild(
-                &globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f,
-                this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
+                &globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.world.pos.x - 10.0f,
+                this->dyna.actor.world.pos.y, this->dyna.actor.world.pos.z, 0, this->dyna.actor.world.rot.y, 0, 0);
             DynaPolyActor_Init(&this->dyna, 0);
             CollisionHeader_GetVirtual(&D_06000A1C, &sp4C);
             this->dyna.bgId =
@@ -190,7 +190,7 @@ void func_80A87B9C(EnJj* this, GlobalContext* globalCtx) {
 
 // #pragma GLOBAL_ASM("asm/non_matchings/overlays/actors/ovl_En_Jj/func_80A87BEC.s")
 void func_80A87BEC(EnJj* this, GlobalContext* globalCtx) {
-    if (this->dyna.actor.xzDistToLink < 300.0f) {
+    if (this->dyna.actor.xzDistToPlayer < 300.0f) {
         func_80A87800(this, func_80A87B9C);
     }
 }
@@ -199,7 +199,7 @@ void func_80A87BEC(EnJj* this, GlobalContext* globalCtx) {
 void func_80A87C30(EnJj* this, GlobalContext* globalCtx) {
     Player* player = PLAYER;
 
-    if ((Math_Vec3f_DistXZ(&D_80A88CF0, &player->actor.posRot.pos) < 300.0f) &&
+    if ((Math_Vec3f_DistXZ(&D_80A88CF0, &player->actor.world.pos) < 300.0f) &&
         (globalCtx->isPlayerDroppingFish(globalCtx) != 0)) {
         this->unk_30C = 100;
         func_80A87800(this, func_80A87CEC);
