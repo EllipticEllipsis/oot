@@ -42,7 +42,7 @@ void func_80A13098(EnFirefly* this) {
 
 which is intended to be as close to the original code as possible. We are doing *matching* decomp: in the right context, the above C compiles into *precisely* the assembly code above, not just equivalent code.
 
-N.B. We are using only publicly available code. In particular, we are not looking at any of the recent Nintendo leaks. (These apparently contain very little Ocarina of Time material anyway.)
+N.B. We are using only publicly available code. In particular, we are not looking at any of the recent Nintendo source code leaks. (These apparently contain very little Ocarina of Time material anyway.)
 
 Progress of the project can be found at [https://zelda64.dev]. The long-term goal of this project is to obtain a complete compilable version of the code for every publicly released version of Ocarina of Time (there are also sister projects for Majora's Mask and other Zelda games). *We are not working on a PC Port, and this project will not be making one*, although the resulting code will be very useful if someone does intend to make such a port.
 

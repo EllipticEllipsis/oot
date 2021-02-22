@@ -20,11 +20,11 @@ It is currently divided into six sections as follows:
 
 3. These are prototypes for the "main four" functions that almost every actor has. You add more functions here if they need to be declared above their first use.
 
-4. A set of `extern`s. These should be moved immediately to between blocks 5 and 6 to conform with how the rest of our files are structured. These symbols have been automatically extracted from the MIPS code. They point to addresses in the ROM where assets are stored (usually animations or display lists). There may turn out to be some that were not caught by the script, in which case they need to be placed in the file called `undefined_syms.txt` in the root directory of the project. Ask in Discord for how to do this: it is simple, but rare enough to not be worth covering here.
+4. A set of `extern`s. These refer to data that comes from other files, usually in the actor's corresponding object file. They point to addresses in the ROM where assets are stored (usually collision data, animations or display lists). Once the corresponding files have been decompiled, these will simply be replaced by including the object file. For now, you can put them between blocks 5 and 6 to conform with how the rest of our files are structured. These symbols have been automatically extracted from the MIPS code. There may turn out to be some that were not caught by the script, in which case they need to be placed in the file called `undefined_syms.txt` in the root directory of the project. Ask in Discord for how to do this: it is simple, but rare enough to not be worth covering here.
 
-5. Commented-out section containing the `InitVars`. This can be ignored until we import the data: it is a section of the actor data that has been imported automatically since, unlike most of the data, it has the same format in every actor.
+5. Commented-out section containing the `InitVars`. This can be ignored until we import the data: it is a section of the actor data that has been imported automatically since, unlike most of the data, it has the same format in every actor. (This image is out of date: actors now also have their ColliderInits in here)
 
-6. List of functions. Each `# pragma` is letting the compiler use the corresponding assembly file while we do not have decompiled C code for that function. The majority of the decompilation work is converting these functions into C that it looks like a human wrote.
+6. List of functions. Each `#pragma` is letting the compiler use the corresponding assembly file while we do not have decompiled C code for that function. The majority of the decompilation work is converting these functions into C that it looks like a human wrote.
 
 ## Header file
 
@@ -64,7 +64,7 @@ There are two ways of transfering the data into an actor: we can either
 - import it all naively as words (`s32`s), which will still allow it to compile, and sort out the actual types later, or 
 - we can extern each piece of data as we come across it, and come back to it later when we have a better idea of what it is.
 
-Since Fig's video goes over the first of these, we will concentrate on the second. Thankfully this means we essentially don't have to do anything to the data yet. Nevertheless, it is often quite helpful to copy over at least some of the data and leave it commented out for later replacement. *Data must go in the same order as in the data file, and data is "all or nothing": you cannot only import some of it*.
+We will concentrate on the second here; the other is covered in [the document about data](data.md). Thankfully this means we essentially don't have to do anything to the data yet. Nevertheless, it is often quite helpful to copy over at least some of the data and leave it commented out for later replacement. *Data must go in the same order as in the data file, and data is "all or nothing": you cannot only import some of it*.
 
 ![Data copied in and commented out](images/data_inserted_commented_out.png)
 
@@ -73,7 +73,7 @@ Since Fig's video goes over the first of these, we will concentrate on the secon
 (Sometimes it is useful to import the data in the middle of doing functions: you just have to choose an appropriate moment.)
 
 
-Some actors also have a `.bss` file. This is just data that is initialised to 0, and can be imported immediately.
+Some actors also have a `.bss` file. This is just data that is initialised to 0, and can be imported immediately once you know what type it is, by declaring it without giving it a value.
 
 ## Init
 
@@ -176,7 +176,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
         } else {
             func_80A87800(this, &func_80A87C30);
         }
-        this->unk300 = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->actor, globalCtx, (u16)0x5A, this->actor.posRot.pos.x - 10.0f, this->actor.posRot.pos.y, this->actor.posRot.pos.z, 0, (?32) this->actor.posRot.rot.y, 0, 0);
+        this->unk300 = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->actor, globalCtx, (u16)0x5A, this->actor.world.pos.x - 10.0f, this->actor.world.pos.y, this->actor.world.pos.z, 0, (?32) this->actor.world.rot.y, 0, 0);
         DynaPolyActor_Init((DynaPolyActor *) this, 0);
         CollisionHeader_GetVirtual((void *) &D_06000A1C, &sp4C);
         this->unk_14C = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->actor, sp4C);
@@ -355,7 +355,9 @@ Collider_SetCylinder(globalCtx, &this->collider, &this->dyna.actor, &D_80A88CB4)
 
 (You may prefer to just comment out temps initially, to keep track of where they were.)
 
-The last thing we need to deal with is the last variable of `Collider_SetCylinder`, which is again data. Also again we have a script to translate the raw data. This one is called `colliderinit.py`, and lives in `tools/overlayhelpers`. It takes the VRAM address of the data and the type of collider (for more info on use, pass it `-h`). We find
+The last thing we need to deal with is the last variable of `Collider_SetCylinder`, which is again data. 
+
+<!--Also again we have a script to translate the raw data. This one is called `colliderinit.py`, and lives in `tools/overlayhelpers`. It takes the VRAM address of the data and the type of collider (for more info on use, pass it `-h`). We find
 ```
 $ ./tools/overlayhelpers/colliderinit.py 80A88CB4 ColliderCylinderInit
 ovl_En_Jj: Rom 00E3E3D0:00E3F9E0 VRam 80A87800:80A88E10 Offset 0014B4
@@ -377,6 +379,14 @@ extern ColliderCylinderInit D_80A88CB4;
 //     { 0x00, { 0x00000000, 0x00, 0x00 }, { 0x00000004, 0x00, 0x00 }, 0x00, 0x01, 0x01 },
 //     { 170, 150, 0, { 0, 0, 0 } },
 // };
+```-->
+
+This is already in the actor file in the correct format, all you need to do is add an extern for it underneath:
+```C
+/*
+[...]
+*/
+extern ColliderCylinderInit D_80A88CB4;
 ```
 
 Unlike the InitChain, this is not an array, so keep the `&` in the function.
@@ -436,13 +446,13 @@ Animation_PlayLoop(&this->skelAnime, &D_06001F4C);
 
 This function also gives us information about other things in the struct. One obvious thing that sticks out is
 ```C
-this->unk300 = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, (u16)0x5A, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, (?32) this->dyna.actor.posRot.rot.y, 0, 0);
+this->unk300 = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, (u16)0x5A, this->dyna.actor.world.pos.x - 10.0f, this->dyna.actor.world.pos.y, this->dyna.actor.world.pos.z, 0, (?32) this->dyna.actor.world.rot.y, 0, 0);
 ```
 Hovering over this function tells us it outputs a pointer to the spawned actor, so `this->unk_300` is an `Actor*`. We may or may not care what this actor actually is, depending on how it is used later on, so let's just add `/* 0x0300 */ Actor* childActor` to the struct for now.
 
 We can look up what the actor with ID 0x5A is in `z64actor.h`: we find it is `ACTOR_EN_JJ`. So some Jabus spawn another Jabu. Filling this in and removing the spurious cast, we have
 ```C
-this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
+this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.world.pos.x - 10.0f, this->dyna.actor.world.pos.y, this->dyna.actor.world.pos.z, 0, this->dyna.actor.world.rot.y, 0, 0);
 ```
 
 Finally, we have this block:
@@ -511,7 +521,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
         } else {
             func_80A87800(this, &func_80A87C30);
         }
-        this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
+        this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.world.pos.x - 10.0f, this->dyna.actor.world.pos.y, this->dyna.actor.world.pos.z, 0, this->dyna.actor.world.rot.y, 0, 0);
         DynaPolyActor_Init(&this->dyna, 0);
         CollisionHeader_GetVirtual(&D_06000A1C, &sp4C);
         this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
@@ -643,10 +653,23 @@ const ActorInit En_Jj_InitVars = {
 */
 
 extern ColliderCylinderInit D_80A88CB4;
-// static ColliderCylinderInit sCylinderInit =
-// {
-//     { COLTYPE_UNK10, 0x00, 0x09, 0x39, 0x10, COLSHAPE_CYLINDER },
-//     { 0x00, { 0x00000000, 0x00, 0x00 }, { 0x00000004, 0x00, 0x00 }, 0x00, 0x01, 0x01 },
+// static ColliderCylinderInit sCylinderInit = {
+//     {
+//         COLTYPE_NONE,
+//         AT_NONE,
+//         AC_ON | AC_TYPE_PLAYER,
+//         OC1_ON | OC1_TYPE_ALL,
+//         OC2_TYPE_1,
+//         COLSHAPE_CYLINDER,
+//     },
+//     {
+//         ELEMTYPE_UNK0,
+//         { 0x00000000, 0x00, 0x00 },
+//         { 0x00000004, 0x00, 0x00 },
+//         TOUCH_NONE,
+//         BUMP_ON,
+//         OCELEM_ON,
+//     },
 //     { 170, 150, 0, { 0, 0, 0 } },
 // };
 
@@ -706,7 +729,7 @@ void EnJj_Init(Actor *thisx, GlobalContext *globalCtx) {
         } else {
             func_80A87800(this, func_80A87C30);
         }
-        this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f, this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
+        this->childActor = Actor_SpawnAsChild(&globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.world.pos.x - 10.0f, this->dyna.actor.world.pos.y, this->dyna.actor.world.pos.z, 0, this->dyna.actor.world.rot.y, 0, 0);
         DynaPolyActor_Init(&this->dyna, 0);
         CollisionHeader_GetVirtual(&D_06000A1C, &sp4C);
         this->dyna.bgId = DynaPoly_SetBgActor(globalCtx, &globalCtx->colCtx.dyna, &this->dyna.actor, sp4C);
@@ -831,8 +854,8 @@ void EnJj_Init(Actor* thisx, GlobalContext* globalCtx) {
                 func_80A87800(this, func_80A87C30);
             }
             this->childActor = Actor_SpawnAsChild(
-                &globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.posRot.pos.x - 10.0f,
-                this->dyna.actor.posRot.pos.y, this->dyna.actor.posRot.pos.z, 0, this->dyna.actor.posRot.rot.y, 0, 0);
+                &globalCtx->actorCtx, &this->dyna.actor, globalCtx, ACTOR_EN_JJ, this->dyna.actor.world.pos.x - 10.0f,
+                this->dyna.actor.world.pos.y, this->dyna.actor.world.pos.z, 0, this->dyna.actor.world.rot.y, 0, 0);
             DynaPolyActor_Init(&this->dyna, 0);
             CollisionHeader_GetVirtual(&D_06000A1C, &sp4C);
             this->dyna.bgId =

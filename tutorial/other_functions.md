@@ -95,7 +95,7 @@ also matches, with no need for the `GlobalContext*` temp.
 Of the two functions we have available, `func_80A87BEC` is shorter, so we do that next. Since we haven't changed any types or header file information, there is no need to remake the context. mips2c gives
 ```C
 void func_80A87BEC(EnJj *this, GlobalContext *globalCtx) {
-    if (this->dyna.actor.xzDistToLink < 300.0f) {
+    if (this->dyna.actor.xzDistToPlayer < 300.0f) {
         func_80A87800(this, &func_80A87B9C);
     }
 }
@@ -108,7 +108,7 @@ void func_80A87B9C(EnJj *this, GlobalContext *globalCtx);
 
 // #pragma GLOBAL_ASM("asm/non_matchings/overlays/actors/ovl_En_Jj/func_80A87BEC.s")
 void func_80A87BEC(EnJj *this, GlobalContext *globalCtx) {
-    if (this->dyna.actor.xzDistToLink < 300.0f) {
+    if (this->dyna.actor.xzDistToPlayer < 300.0f) {
         func_80A87800(this, func_80A87B9C);
     }
 }
@@ -294,14 +294,16 @@ extern Vec3f D_80A88CF0;
 ```
 (you must include the `.0f` parts even for integer floats: it can affect codegen, and as such it is part of our style).
 
-- replace the mysterious `globalCtx->unk1C44 + 0x24`. The first part is so common that most people on decomp know it by heart: it is the location of the Player actor. `+ 0x24` is obviously an offset that leats to a `Vec3f`, and if you look in the actor struct, you find that this is the location of `PosRot.pos`. To use `Player`, we put `Player* player = PLAYER` at the top of the function.
+- replace the mysterious `globalCtx->unk1C44 + 0x24`. The first part is so common that most people on decomp know it by heart: it is the location of the Player actor. `+ 0x24` is obviously an offset that leats to a `Vec3f`, and if you look in the actor struct, you find that this is the location of `world.pos`. To use `Player`, we put `Player* player = PLAYER` at the top of the function.
+
+**NOTE:** mips_to_c will now output something like `&globalCtx->actorCtx.actorLists[2].head` for the Player pointer instead: this makes a lot more sense, but is not so easy to spot in the ASM without the characteristic `1C44`.
 
 After all this, the function becomes
 ```C
 void func_80A87C30(EnJj *this, GlobalContext *globalCtx) {
     Player* player = PLAYER;
 
-    if ((Math_Vec3f_DistXZ(&D_80A88CF0, &player->actor.posRot.pos) < 300.0f) && (globalCtx->isPlayerDroppingFish(globalCtx) != 0)) {
+    if ((Math_Vec3f_DistXZ(&D_80A88CF0, &player->actor.world.pos) < 300.0f) && (globalCtx->isPlayerDroppingFish(globalCtx) != 0)) {
         this->unk_30C = 100;
         func_80A87800(this, func_80A87CEC);
     }
@@ -344,7 +346,7 @@ The diff now looks fine for this function, but it gives compiler warnings about 
 void func_80A87C30(EnJj *this, GlobalContext *globalCtx) {
     Player* player = PLAYER;
 
-    if ((Math_Vec3f_DistXZ(&D_80A88CF0, &player->actor.posRot.pos) < 300.0f) && (globalCtx->isPlayerDroppingFish(globalCtx) != 0)) {
+    if ((Math_Vec3f_DistXZ(&D_80A88CF0, &player->actor.world.pos) < 300.0f) && (globalCtx->isPlayerDroppingFish(globalCtx) != 0)) {
         this->unk_30C = 100;
         func_80A87800(this, func_80A87CEC);
     }

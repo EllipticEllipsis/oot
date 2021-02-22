@@ -215,7 +215,7 @@ void func_80B1871C(GlobalContext* globalCtx, s32 limbIndex, Gfx** dList, Vec3s* 
     Vec3f sp18 = D_80B18968;
     
     if (limbIndex == 9) {
-        Matrix_MultVec3f(&sp18, &this->actor.posRot2.pos);
+        Matrix_MultVec3f(&sp18, &this->actor.world2.pos);
     }
 }
 ```
@@ -635,6 +635,7 @@ Hooray, we won!
 
 Some symbols in the data have been decompiled wrongly, being incorrectly separated from the previous symbol due to how it was accessed by the actor's functions. However, most of these have now been fixed. Some more detail is given in [Types, structs and padding](types_structs_padding.md) If you are unsure, ask!
 
+
 ## Inlining
 
 After the file is finished, it is possible to move some static data into functions. This requires that:
@@ -642,3 +643,8 @@ After the file is finished, it is possible to move some static data into functio
 2. The ordering of the data can be maintained
 
 Additionally, we prefer to keep larger data (more than a line or two) out of functions anyway.
+
+
+# Finally: .bss
+
+A .bss contains data that is uninitialised (actually initialised to `0`). For most actors all you need to do is declare it at the top of the actor file without giving it a value, once you find out what type it is.
