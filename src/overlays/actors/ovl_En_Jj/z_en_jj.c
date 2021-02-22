@@ -24,7 +24,7 @@ void func_80A87EF0(EnJj* this, GlobalContext* globalCtx);
 
 const ActorInit En_Jj_InitVars = {
     ACTOR_EN_JJ,
-    ACTORTYPE_ITEMACTION,
+    ACTORCAT_ITEMACTION,
     FLAGS,
     OBJECT_JJ,
     sizeof(EnJj),
@@ -40,10 +40,23 @@ s32 unused = 0;
 
 s32 usused2[] = { 0, 0 };
 
-static ColliderCylinderInit sCylinderInit =
-{
-    { COLTYPE_UNK10, 0x00, 0x09, 0x39, 0x10, COLSHAPE_CYLINDER },
-    { 0x00, { 0x00000000, 0x00, 0x00 }, { 0x00000004, 0x00, 0x00 }, 0x00, 0x01, 0x01 },
+static ColliderCylinderInit sCylinderInit = {
+    {
+        COLTYPE_NONE,
+        AT_NONE,
+        AC_ON | AC_TYPE_PLAYER,
+        OC1_ON | OC1_TYPE_ALL,
+        OC2_TYPE_1,
+        COLSHAPE_CYLINDER,
+    },
+    {
+        ELEMTYPE_UNK0,
+        { 0x00000000, 0x00, 0x00 },
+        { 0x00000004, 0x00, 0x00 },
+        TOUCH_NONE,
+        BUMP_ON,
+        OCELEM_ON,
+    },
     { 170, 150, 0, { 0, 0, 0 } },
 };
 
